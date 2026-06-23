@@ -1,191 +1,116 @@
 {% extends "base.html" %}
-
-{% block title %}Dashboard - UMKM Copilot{% endblock %}
+{% block title %}Dashboard{% endblock %}
 {% block page_title %}Dashboard{% endblock %}
 
 {% block content %}
 <!-- Stats -->
-<div class="row g-3 mb-4">
-    <div class="col-6 col-lg-3">
-        <div class="stat-card">
-            <div class="stat-icon blue">
-                <i class="bi bi-robot"></i>
+<div class="stats">
+    <div class="stat">
+        <div class="stat-ico blue"><i class="bi bi-robot"></i></div>
+        <div><div class="stat-val">{{ today_conversations }}</div><div class="stat-lbl">Chat Hari Ini</div></div>
+    </div>
+    <div class="stat">
+        <div class="stat-ico green"><i class="bi bi-chat-left-text"></i></div>
+        <div><div class="stat-val">{{ week_conversations }}</div><div class="stat-lbl">Minggu Ini</div></div>
+    </div>
+    <div class="stat">
+        <div class="stat-ico purple"><i class="bi bi-box-seam"></i></div>
+        <div><div class="stat-val">{{ total_products }}</div><div class="stat-lbl">Produk</div></div>
+    </div>
+    <div class="stat">
+        <div class="stat-ico yellow"><i class="bi bi-exclamation-triangle"></i></div>
+        <div><div class="stat-val">{{ low_stock }}</div><div class="stat-lbl">Stok Tipis</div></div>
+    </div>
+</div>
+
+<div class="grid-2">
+    <!-- AI Status -->
+    <div class="card">
+        <div class="card-head"><i class="bi bi-robot" style="color:var(--c-blue)"></i> AI Agent</div>
+        <div class="card-body">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                <div class="stat-ico green"><i class="bi bi-check-circle-fill"></i></div>
+                <div style="flex:1">
+                    <div style="font-weight:600;font-size:.88rem;">Gemini AI Online</div>
+                    <div style="font-size:.72rem;color:var(--c-text-3);">Siap melayani 24/7</div>
+                </div>
+                <span class="badge badge-green"><i class="bi bi-lightning-fill"></i> Active</span>
             </div>
-            <div class="stat-info">
-                <h3>{{ today_conversations }}</h3>
-                <p>Chat Hari Ini</p>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+                <div style="background:var(--c-bg);border:1px solid var(--c-border);border-radius:var(--r);padding:12px;text-align:center;">
+                    <div style="font-size:1.1rem;font-weight:700;color:var(--c-green)">99.9%</div>
+                    <div style="font-size:.62rem;color:var(--c-text-3);">Uptime</div>
+                </div>
+                <div style="background:var(--c-bg);border:1px solid var(--c-border);border-radius:var(--r);padding:12px;text-align:center;">
+                    <div style="font-size:1.1rem;font-weight:700;color:var(--c-blue)">&lt;2s</div>
+                    <div style="font-size:.62rem;color:var(--c-text-3);">Respon</div>
+                </div>
+                <div style="background:var(--c-bg);border:1px solid var(--c-border);border-radius:var(--r);padding:12px;text-align:center;">
+                    <div style="font-size:1.1rem;font-weight:700;color:var(--c-yellow)">{{ week_orders }}</div>
+                    <div style="font-size:.62rem;color:var(--c-text-3);">Order</div>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-6 col-lg-3">
-        <div class="stat-card">
-            <div class="stat-icon green">
-                <i class="bi bi-chat-left-text"></i>
-            </div>
-            <div class="stat-info">
-                <h3>{{ week_conversations }}</h3>
-                <p>Minggu Ini</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-6 col-lg-3">
-        <div class="stat-card">
-            <div class="stat-icon purple">
-                <i class="bi bi-box-seam"></i>
-            </div>
-            <div class="stat-info">
-                <h3>{{ total_products }}</h3>
-                <p>Produk Aktif</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-6 col-lg-3">
-        <div class="stat-card">
-            <div class="stat-icon yellow">
-                <i class="bi bi-exclamation-triangle"></i>
-            </div>
-            <div class="stat-info">
-                <h3>{{ low_stock }}</h3>
-                <p>Stok Tipis</p>
+
+    <!-- Quick Actions -->
+    <div class="card">
+        <div class="card-head"><i class="bi bi-lightning" style="color:var(--c-yellow)"></i> Aksi Cepat</div>
+        <div class="card-body">
+            <div style="display:flex;flex-direction:column;gap:8px;">
+                <a href="{{ url_for('demo_page') }}" class="btn btn-primary" style="width:100%;justify-content:flex-start;">
+                    <i class="bi bi-play-circle"></i> Coba Demo AI
+                </a>
+                <a href="{{ url_for('product_create') }}" class="btn btn-ghost" style="width:100%;justify-content:flex-start;">
+                    <i class="bi bi-plus-circle" style="color:var(--c-green)"></i> Tambah Produk
+                </a>
+                <a href="{{ url_for('conversations_list') }}" class="btn btn-ghost" style="width:100%;justify-content:flex-start;">
+                    <i class="bi bi-chat-left-text" style="color:var(--c-blue)"></i> Lihat Percakapan
+                </a>
+                <a href="{{ url_for('settings_page') }}" class="btn btn-ghost" style="width:100%;justify-content:flex-start;">
+                    <i class="bi bi-gear" style="color:var(--c-text-3)"></i> Pengaturan
+                </a>
             </div>
         </div>
     </div>
 </div>
 
-<div class="row g-4">
-    <!-- Left: AI Status + WhatsApp -->
-    <div class="col-lg-7">
-        <!-- AI Status -->
-        <div class="card">
-            <div class="card-header">
-                <i class="bi bi-robot" style="color:var(--gemini-blue);"></i>
-                AI Agent Status
-            </div>
-            <div class="card-body">
-                <div class="d-flex align-items-center gap-3 mb-4">
-                    <div class="stat-icon green" style="width:48px;height:48px;">
-                        <i class="bi bi-check-circle-fill"></i>
-                    </div>
-                    <div class="flex-grow-1">
-                        <h6 class="mb-0">Gemini AI Online</h6>
-                        <small style="color:var(--text-muted);">Siap melayani customer 24/7</small>
-                    </div>
-                    <span class="badge" style="background:rgba(52,168,83,0.12);color:#34A853;">
-                        <i class="bi bi-lightning-fill me-1"></i>Active
-                    </span>
-                </div>
-                
-                <div class="row g-3">
-                    <div class="col-4">
-                        <div style="background:var(--bg-surface);border-radius:var(--radius);padding:14px;text-align:center;">
-                            <div style="font-size:1.3rem;font-weight:700;color:#34A853;">99.9%</div>
-                            <div style="font-size:0.68rem;color:var(--text-muted);margin-top:2px;">Uptime</div>
-                        </div>
-                    </div>
-                    <div class="col-4">
-                        <div style="background:var(--bg-surface);border-radius:var(--radius);padding:14px;text-align:center;">
-                            <div style="font-size:1.3rem;font-weight:700;color:#4285F4;">&lt;2s</div>
-                            <div style="font-size:0.68rem;color:var(--text-muted);margin-top:2px;">Response</div>
-                        </div>
-                    </div>
-                    <div class="col-4">
-                        <div style="background:var(--bg-surface);border-radius:var(--radius);padding:14px;text-align:center;">
-                            <div style="font-size:1.3rem;font-weight:700;color:#FBBC05;">{{ week_orders }}</div>
-                            <div style="font-size:0.68rem;color:var(--text-muted);margin-top:2px;">Orders</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+<!-- WhatsApp -->
+<div class="card">
+    <div class="card-head"><i class="bi bi-whatsapp" style="color:#25D366"></i> WhatsApp Integration</div>
+    <div class="card-body" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <div>
+            <div style="font-size:.82rem;">AI otomatis balas pesan WhatsApp</div>
+            <code style="font-size:.68rem;color:var(--c-text-3);background:var(--c-bg);padding:2px 6px;border-radius:4px;border:1px solid var(--c-border);">{{ request.host_url }}webhook</code>
         </div>
-        
-        <!-- WhatsApp -->
-        <div class="card">
-            <div class="card-header">
-                <i class="bi bi-whatsapp" style="color:#25D366;"></i>
-                WhatsApp Integration
-            </div>
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <p class="mb-1" style="font-size:0.88rem;">AI otomatis balas pesan WhatsApp masuk</p>
-                        <code style="font-size:0.72rem;color:var(--text-muted);background:var(--bg-surface);padding:3px 8px;border-radius:4px;">{{ request.host_url }}webhook</code>
-                    </div>
-                    <span class="badge" style="background:rgba(37,211,102,0.12);color:#25D366;">
-                        <i class="bi bi-check-circle me-1"></i>Connected
-                    </span>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Right: Quick Actions -->
-    <div class="col-lg-5">
-        <div class="card">
-            <div class="card-header">
-                <i class="bi bi-lightning" style="color:#FBBC05;"></i>
-                Aksi Cepat
-            </div>
-            <div class="card-body">
-                <div class="d-grid gap-2">
-                    <a href="{{ url_for('product_create') }}" class="btn btn-outline-light text-start d-flex align-items-center justify-content-between py-3">
-                        <span><i class="bi bi-plus-circle me-2" style="color:#34A853;"></i>Tambah Produk Baru</span>
-                        <i class="bi bi-chevron-right" style="color:var(--text-muted);font-size:0.8rem;"></i>
-                    </a>
-                    <a href="{{ url_for('demo_page') }}" class="btn btn-primary text-start d-flex align-items-center justify-content-between py-3">
-                        <span><i class="bi bi-play-circle me-2"></i>Coba Demo AI</span>
-                        <i class="bi bi-chevron-right" style="opacity:0.7;font-size:0.8rem;"></i>
-                    </a>
-                    <a href="{{ url_for('conversations_list') }}" class="btn btn-outline-light text-start d-flex align-items-center justify-content-between py-3">
-                        <span><i class="bi bi-chat-left-text me-2" style="color:#4285F4;"></i>Lihat Percakapan</span>
-                        <i class="bi bi-chevron-right" style="color:var(--text-muted);font-size:0.8rem;"></i>
-                    </a>
-                    <a href="{{ url_for('settings_page') }}" class="btn btn-outline-light text-start d-flex align-items-center justify-content-between py-3">
-                        <span><i class="bi bi-gear me-2" style="color:var(--text-muted);"></i>Pengaturan</span>
-                        <i class="bi bi-chevron-right" style="color:var(--text-muted);font-size:0.8rem;"></i>
-                    </a>
-                </div>
-            </div>
-        </div>
+        <span class="badge badge-green"><i class="bi bi-check-circle"></i> Connected</span>
     </div>
 </div>
 
 <!-- Recent Conversations -->
 <div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <span><i class="bi bi-chat-left-text me-2"></i>Percakapan Terbaru</span>
-        <a href="{{ url_for('conversations_list') }}" class="btn btn-sm btn-outline-light" style="font-size:0.72rem;">
-            Lihat Semua <i class="bi bi-arrow-right ms-1"></i>
-        </a>
+    <div class="card-head" style="justify-content:space-between;">
+        <span><i class="bi bi-chat-left-text me-1"></i> Percakapan Terbaru</span>
+        <a href="{{ url_for('conversations_list') }}" class="btn btn-sm btn-ghost">Lihat Semua <i class="bi bi-arrow-right" style="font-size:.6rem;margin-left:4px;"></i></a>
     </div>
-    <div class="card-body p-0">
-        {% if recent_conversations %}
-            {% for conv in recent_conversations %}
-            <div class="conv-item">
-                <div class="conv-avatar">
-                    {{ conv.customer_name[0] if conv.customer_name else conv.customer_phone[-2:] }}
+    {% if recent_conversations %}
+        {% for c in recent_conversations %}
+        <div class="list-item">
+            <div class="list-av">{{ c.customer_name[0] if c.customer_name else '?' }}</div>
+            <div class="list-body">
+                <div class="list-top">
+                    <span class="list-name">{{ c.customer_name or 'Customer' }} <span class="badge badge-gray">{{ c.intent }}</span></span>
+                    <span class="list-time">{{ c.created_at|timeago }}</span>
                 </div>
-                <div class="conv-body">
-                    <div class="conv-header">
-                        <span class="conv-name">
-                            {{ conv.customer_name or 'Customer' }}
-                            <span class="badge bg-secondary ms-2" style="font-size:0.58rem;">{{ conv.intent }}</span>
-                        </span>
-                        <span class="conv-time">{{ conv.created_at|timeago }}</span>
-                    </div>
-                    <div class="conv-preview">
-                        <span style="color:var(--text-muted);">In:</span> {{ conv.message_in[:50] }}{% if conv.message_in|length > 50 %}...{% endif %}
-                        <br>
-                        <span style="color:#8ab4f8;">AI:</span> {{ conv.message_out[:50] }}{% if conv.message_out|length > 50 %}...{% endif %}
-                    </div>
+                <div class="list-sub">
+                    <span style="color:var(--c-text-3)">In:</span> {{ c.message_in[:50] }}{% if c.message_in|length > 50 %}...{% endif %}
+                    · <span style="color:var(--c-blue)">AI:</span> {{ c.message_out[:40] }}{% if c.message_out|length > 40 %}...{% endif %}
                 </div>
             </div>
-            {% endfor %}
-        {% else %}
-            <div class="text-center py-5">
-                <i class="bi bi-chat-dots" style="font-size:2.5rem;color:var(--text-muted);"></i>
-                <p class="mt-2" style="color:var(--text-muted);font-size:0.88rem;">Belum ada percakapan</p>
-            </div>
-        {% endif %}
-    </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty"><i class="bi bi-chat-dots"></i>Belum ada percakapan</div>
+    {% endif %}
 </div>
 {% endblock %}

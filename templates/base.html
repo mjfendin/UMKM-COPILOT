@@ -2,142 +2,92 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}UMKM Copilot{% endblock %}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
 </head>
 <body>
-    <!-- Sidebar -->
-    <nav id="sidebar" class="sidebar">
-        <div class="sidebar-brand">
-            <div class="brand-icon">
-                <i class="bi bi-stars"></i>
-            </div>
-            <span class="brand-text">UMKM Copilot</span>
-        </div>
-        
-        <ul class="sidebar-nav">
-            <li class="nav-section">Menu</li>
-            <li>
-                <a href="{{ url_for('index') }}" class="nav-link {% if request.endpoint == 'index' %}active{% endif %}">
-                    <i class="bi bi-grid-1x2"></i>
-                    <span>Dashboard</span>
-                </a>
-            </li>
-            <li>
-                <a href="{{ url_for('products_list') }}" class="nav-link {% if request.endpoint in ['products_list', 'product_create', 'product_edit'] %}active{% endif %}">
-                    <i class="bi bi-box-seam"></i>
-                    <span>Produk</span>
-                </a>
-            </li>
-            <li>
-                <a href="{{ url_for('conversations_list') }}" class="nav-link {% if request.endpoint == 'conversations_list' %}active{% endif %}">
-                    <i class="bi bi-chat-left-text"></i>
-                    <span>Percakapan</span>
-                </a>
-            </li>
-            <li>
-                <a href="{{ url_for('analytics_page') }}" class="nav-link {% if request.endpoint == 'analytics_page' %}active{% endif %}">
-                    <i class="bi bi-bar-chart-line"></i>
-                    <span>Analitik</span>
-                </a>
-            </li>
-            
-            <li class="nav-section">Tools</li>
-            <li>
-                <a href="{{ url_for('demo_page') }}" class="nav-link {% if request.endpoint == 'demo_page' %}active{% endif %}">
-                    <i class="bi bi-play-circle"></i>
-                    <span>Demo AI</span>
-                </a>
-            </li>
-            <li>
-                <a href="{{ url_for('settings_page') }}" class="nav-link {% if request.endpoint == 'settings_page' %}active{% endif %}">
-                    <i class="bi bi-gear"></i>
-                    <span>Pengaturan</span>
-                </a>
-            </li>
-        </ul>
-        
-        <div class="sidebar-footer">
-            <div class="ai-dot"></div>
-            <small>Gemini AI Active</small>
-        </div>
-    </nav>
-    
-    <!-- Main Content -->
-    <main class="main-content">
-        <header class="topbar">
-            <button class="mobile-menu-btn" onclick="toggleSidebar()">
-                <i class="bi bi-list"></i>
-            </button>
-            <div class="topbar-title">
-                <h5>{% block page_title %}Dashboard{% endblock %}</h5>
-            </div>
-            <div class="topbar-right">
-                <span class="badge" style="background:rgba(52,168,83,0.15);color:#34A853;">
-                    <i class="bi bi-check-circle-fill me-1"></i>AI Online
-                </span>
-            </div>
-        </header>
-        
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <div class="content-wrapper" style="padding-bottom:0;">
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ 'success' if category == 'success' else 'warning' if category == 'warning' else 'danger' if category == 'danger' else 'info' }} alert-dismissible fade show" role="alert" style="background:{{ 'rgba(52,168,83,0.1)' if category == 'success' else 'rgba(251,188,5,0.1)' if category == 'warning' else 'rgba(234,67,53,0.1)' if category == 'danger' else 'rgba(66,133,244,0.1)' }};border-color:{{ 'rgba(52,168,83,0.3)' if category == 'success' else 'rgba(251,188,5,0.3)' if category == 'warning' else 'rgba(234,67,53,0.3)' if category == 'danger' else 'rgba(66,133,244,0.3)' }};color:var(--text-primary);">
-                            {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" style="filter:invert(1);"></button>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        {% endwith %}
-        
-        <div class="content-wrapper">
-            {% block content %}{% endblock %}
-        </div>
-    </main>
-    
-    <!-- Mobile Bottom Nav -->
-    <nav class="mobile-bottom-nav">
-        <a href="{{ url_for('index') }}" class="nav-item {% if request.endpoint == 'index' %}active{% endif %}">
-            <i class="bi bi-grid-1x2"></i>
-            <span>Home</span>
+
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-logo"><i class="bi bi-stars"></i></div>
+        <span class="sidebar-title">UMKM Copilot</span>
+    </div>
+    <nav class="sidebar-menu">
+        <div class="menu-label">Menu</div>
+        <a href="{{ url_for('index') }}" class="menu-link{% if request.endpoint == 'index' %} active{% endif %}">
+            <i class="bi bi-grid-1x2"></i> Dashboard
         </a>
-        <a href="{{ url_for('products_list') }}" class="nav-item {% if request.endpoint in ['products_list', 'product_create'] %}active{% endif %}">
-            <i class="bi bi-box-seam"></i>
-            <span>Produk</span>
+        <a href="{{ url_for('products_list') }}" class="menu-link{% if request.endpoint in ['products_list','product_create','product_edit'] %} active{% endif %}">
+            <i class="bi bi-box-seam"></i> Produk
         </a>
-        <a href="{{ url_for('conversations_list') }}" class="nav-item {% if request.endpoint == 'conversations_list' %}active{% endif %}">
-            <i class="bi bi-chat-left-text"></i>
-            <span>Chat</span>
+        <a href="{{ url_for('conversations_list') }}" class="menu-link{% if request.endpoint == 'conversations_list' %} active{% endif %}">
+            <i class="bi bi-chat-left-text"></i> Percakapan
         </a>
-        <a href="{{ url_for('demo_page') }}" class="nav-item {% if request.endpoint == 'demo_page' %}active{% endif %}">
-            <i class="bi bi-play-circle"></i>
-            <span>Demo</span>
+        <a href="{{ url_for('analytics_page') }}" class="menu-link{% if request.endpoint == 'analytics_page' %} active{% endif %}">
+            <i class="bi bi-bar-chart-line"></i> Analitik
         </a>
-        <a href="{{ url_for('settings_page') }}" class="nav-item {% if request.endpoint == 'settings_page' %}active{% endif %}">
-            <i class="bi bi-gear"></i>
-            <span>Atur</span>
+        <div class="menu-label">Tools</div>
+        <a href="{{ url_for('demo_page') }}" class="menu-link{% if request.endpoint == 'demo_page' %} active{% endif %}">
+            <i class="bi bi-play-circle"></i> Demo AI
+        </a>
+        <a href="{{ url_for('settings_page') }}" class="menu-link{% if request.endpoint == 'settings_page' %} active{% endif %}">
+            <i class="bi bi-gear"></i> Pengaturan
         </a>
     </nav>
-    
-    <div id="sidebarOverlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
-    
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('show');
-            document.getElementById('sidebarOverlay').classList.toggle('show');
-        }
-        document.querySelectorAll('.sidebar .nav-link').forEach(link => {
-            link.addEventListener('click', () => {
-                if (window.innerWidth <= 992) toggleSidebar();
-            });
-        });
-    </script>
-    {% block scripts %}{% endblock %}
+    <div class="sidebar-footer">
+        <div class="dot-live"></div>
+        <span>Gemini AI Active</span>
+    </div>
+</aside>
+
+<main class="main">
+    <header class="topbar">
+        <button class="hamburger" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+        <h1>{% block page_title %}Dashboard{% endblock %}</h1>
+        <span class="topbar-badge"><i class="bi bi-check-circle-fill" style="margin-right:3px;"></i> Online</span>
+    </header>
+
+    {% with msgs = get_flashed_messages(with_categories=true) %}
+    {% if msgs %}
+    <div class="content" style="padding-bottom:0">
+        {% for cat, msg in msgs %}
+        <div style="padding:10px 14px;border-radius:var(--r);margin-bottom:8px;font-size:.82rem;
+            background:{{ 'rgba(34,197,94,.1)' if cat=='success' else 'rgba(239,68,68,.1)' if cat=='danger' else 'rgba(59,130,246,.1)' }};
+            border:1px solid {{ 'rgba(34,197,94,.25)' if cat=='success' else 'rgba(239,68,68,.25)' if cat=='danger' else 'rgba(59,130,246,.25)' }};
+            color:var(--c-text);">
+            {{ msg }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <div class="content">{% block content %}{% endblock %}</div>
+</main>
+
+<nav class="mob-nav">
+    <a href="{{ url_for('index') }}" class="{% if request.endpoint == 'index' %}active{% endif %}"><i class="bi bi-grid-1x2"></i> Home</a>
+    <a href="{{ url_for('products_list') }}" class="{% if request.endpoint in ['products_list','product_create'] %}active{% endif %}"><i class="bi bi-box-seam"></i> Produk</a>
+    <a href="{{ url_for('demo_page') }}" class="{% if request.endpoint == 'demo_page' %}active{% endif %}"><i class="bi bi-play-circle"></i> Demo</a>
+    <a href="{{ url_for('conversations_list') }}" class="{% if request.endpoint == 'conversations_list' %}active{% endif %}"><i class="bi bi-chat-left-text"></i> Chat</a>
+    <a href="{{ url_for('settings_page') }}" class="{% if request.endpoint == 'settings_page' %}active{% endif %}"><i class="bi bi-gear"></i> Atur</a>
+</nav>
+
+<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+<script>
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('overlay').classList.toggle('open');
+}
+document.querySelectorAll('.sidebar .menu-link').forEach(a => {
+    a.addEventListener('click', () => { if (window.innerWidth <= 900) toggleSidebar(); });
+});
+</script>
+{% block scripts %}{% endblock %}
 </body>
 </html>

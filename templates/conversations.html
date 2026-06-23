@@ -1,59 +1,35 @@
 {% extends "base.html" %}
-
-{% block title %}Percakapan - UMKM Copilot{% endblock %}
-{% block page_title %}Riwayat Percakapan{% endblock %}
+{% block title %}Percakapan{% endblock %}
+{% block page_title %}Percakapan{% endblock %}
 
 {% block content %}
 <div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <span><i class="bi bi-chat-left-text me-2"></i>{{ conversations|length }} Percakapan Terakhir</span>
-        <span class="badge bg-success">AI Aktif</span>
-    </div>
-    <div class="card-body p-0">
-        {% if conversations %}
-            {% for conv in conversations %}
-            <div class="conversation-item">
-                <div class="conversation-avatar">
-                    {{ conv.customer_name[0] if conv.customer_name else conv.customer_phone[-2:] }}
+    <div class="card-head"><i class="bi bi-chat-left-text"></i> {{ conversations|length }} Percakapan</div>
+    {% if conversations %}
+        {% for c in conversations %}
+        <div class="list-item">
+            <div class="list-av">{{ c.customer_name[0] if c.customer_name else '?' }}</div>
+            <div class="list-body">
+                <div class="list-top">
+                    <span class="list-name">{{ c.customer_name or 'Customer' }} <span class="badge badge-gray">{{ c.intent }}</span></span>
+                    <span class="list-time">{{ c.created_at|timeago }}</span>
                 </div>
-                <div class="conversation-info">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="conversation-name">
-                            {{ conv.customer_name or 'Customer' }}
-                            <small class="text-muted ms-2">{{ conv.customer_phone }}</small>
-                        </div>
-                        <span class="badge" style="background: var(--accent-soft); color: var(--accent);">
-                            {{ conv.intent }}
-                        </span>
+                <div style="margin-top:6px;">
+                    <div style="background:var(--c-bg);border:1px solid var(--c-border);border-radius:6px;padding:6px 10px;margin-bottom:4px;font-size:.78rem;">
+                        <span style="color:var(--c-text-3);font-size:.65rem;">Customer:</span><br>{{ c.message_in }}
                     </div>
-                    <div class="mt-2">
-                        <div class="p-2 mb-1" style="background: var(--bg-secondary); border-radius: 8px;">
-                            <small class="text-muted">Customer:</small><br>
-                            {{ conv.message_in }}
-                        </div>
-                        <div class="p-2" style="background: var(--accent-soft); border-radius: 8px;">
-                            <small style="color: var(--accent);">AI Agent:</small><br>
-                            {{ conv.message_out }}
-                        </div>
-                    </div>
-                    <div class="mt-2 d-flex justify-content-between">
-                        <small class="text-muted">
-                            <i class="bi bi-clock me-1"></i>{{ conv.created_at|timeago }}
-                        </small>
-                        <small class="text-muted">
-                            Respon: {{ conv.response_time_ms }}ms
-                        </small>
+                    <div style="background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.15);border-radius:6px;padding:6px 10px;font-size:.78rem;">
+                        <span style="color:var(--c-blue);font-size:.65rem;">AI Agent:</span><br>{{ c.message_out }}
                     </div>
                 </div>
+                <div style="margin-top:4px;font-size:.65rem;color:var(--c-text-3);">
+                    Respon: {{ c.response_time_ms }}ms
+                </div>
             </div>
-            {% endfor %}
-        {% else %}
-            <div class="text-center py-5">
-                <i class="bi bi-chat-dots text-muted" style="font-size: 4rem;"></i>
-                <h5 class="mt-3">Belum Ada Percakapan</h5>
-                <p class="text-muted">Percakapan akan muncul setelah customer mengirim pesan via WhatsApp</p>
-            </div>
-        {% endif %}
-    </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty"><i class="bi bi-chat-dots"></i>Belum ada percakapan</div>
+    {% endif %}
 </div>
 {% endblock %}
