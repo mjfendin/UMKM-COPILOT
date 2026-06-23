@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Pengaturan - UMKM Copilot{% endblock %}
+{% block page_title %}Pengaturan Toko{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <!-- Shop Info -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="bi bi-shop me-2"></i>Informasi Toko
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Nama Toko *</label>
+                            <input type="text" class="form-control" name="name" value="{{ shop.name }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Nama Pemilik</label>
+                            <input type="text" class="form-control" name="owner_name" value="{{ shop.owner_name }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Nomor Telepon</label>
+                            <input type="tel" class="form-control" name="phone" value="{{ shop.phone }}" placeholder="08xxxxxxxxxx">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Kategori Usaha</label>
+                            <select class="form-select" name="category">
+                                {% for cat in ['Retail', 'Retail Fashion', 'F&B', 'Jasa', 'Elektronik', 'Kecantikan', 'Kesehatan', 'Lainnya'] %}
+                                <option value="{{ cat }}" {% if shop.category == cat %}selected{% endif %}>{{ cat }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Alamat</label>
+                            <textarea class="form-control" name="address" rows="2">{{ shop.address }}</textarea>
+                        </div>
+                        
+                        <div class="col-12">
+                            <hr style="border-color: var(--border-color);">
+                            <h6><i class="bi bi-whatsapp me-2" style="color: #25D366;"></i>Integrasi WhatsApp</h6>
+                        </div>
+                        
+                        <div class="col-md-8">
+                            <label class="form-label">Nomor WhatsApp Business</label>
+                            <input type="text" class="form-control" name="whatsapp_number" 
+                                   value="{{ shop.whatsapp_number }}" placeholder="628xxxxxxxxxx">
+                            <small class="text-muted">Format internasional: 628xxxxxxxxxx</small>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Status AI</label>
+                            <div class="form-check form-switch mt-2">
+                                <input class="form-check-input" type="checkbox" name="ai_enabled" 
+                                       id="aiEnabled" {% if shop.ai_enabled %}checked{% endif %}>
+                                <label class="form-check-label" for="aiEnabled">
+                                    {% if shop.ai_enabled %}Aktif{% else %}Nonaktif{% endif %}
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="col-12">
+                            <hr style="border-color: var(--border-color);">
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-circle me-2"></i>Simpan Pengaturan
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Webhook Info -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="bi bi-link-45deg me-2"></i>Webhook Configuration
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-3">Gunakan URL ini untuk mengkonfigurasi WhatsApp Business API:</p>
+                <div class="input-group">
+                    <input type="text" class="form-control" value="{{ request.host_url }}webhook" readonly id="webhookUrl">
+                    <button class="btn btn-outline-light" onclick="copyWebhook()">
+                        <i class="bi bi-clipboard"></i>
+                    </button>
+                </div>
+                <small class="text-muted mt-2 d-block" id="copyStatus"></small>
+                
+                <div class="mt-4">
+                    <h6>Langkah Setup:</h6>
+                    <ol class="text-muted mb-0">
+                        <li>Buka <a href="https://developers.facebook.com/" target="_blank">Meta for Developers</a></li>
+                        <li>Buat aplikasi WhatsApp Business</li>
+                        <li>Set Webhook URL: <code>{{ request.host_url }}webhook</code></li>
+                        <li>Set Verify Token: <code>umkm-copilot-verify</code></li>
+                        <li>Subscribe ke event: <code>messages</code></li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Danger Zone -->
+        <div class="card border-danger">
+            <div class="card-header text-danger">
+                <i class="bi bi-exclamation-triangle me-2"></i>Danger Zone
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Reset semua data toko dan percakapan. Tindakan ini tidak dapat dibatalkan.</p>
+                <button class="btn btn-outline-danger" onclick="confirm('Yakin? Semua data akan dihapus!') ? fetch('/api/reset', {method:'POST'}).then(()=>location.reload()) : null">
+                    <i class="bi bi-trash me-2"></i>Reset Semua Data
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function copyWebhook() {
+        const url = document.getElementById('webhookUrl');
+        url.select();
+        document.execCommand('copy');
+        document.getElementById('copyStatus').textContent = '✓ URL disalin ke clipboard!';
+        setTimeout(() => {
+            document.getElementById('copyStatus').textContent = '';
+        }, 3000);
+    }
+    
+    document.getElementById('aiEnabled').addEventListener('change', function() {
+        this.nextElementSibling.textContent = this.checked ? 'Aktif' : 'Nonaktif';
+    });
+</script>
+{% endblock %}
