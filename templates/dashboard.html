@@ -4,22 +4,22 @@
 {% block page_title %}Dashboard{% endblock %}
 
 {% block content %}
-<!-- Stats Row -->
-<div class="row g-4 mb-4">
+<!-- Stats -->
+<div class="row g-3 mb-4">
     <div class="col-6 col-lg-3">
         <div class="stat-card">
-            <div class="stat-icon green">
+            <div class="stat-icon blue">
                 <i class="bi bi-robot"></i>
             </div>
             <div class="stat-info">
                 <h3>{{ today_conversations }}</h3>
-                <p>Hari Ini</p>
+                <p>Chat Hari Ini</p>
             </div>
         </div>
     </div>
     <div class="col-6 col-lg-3">
         <div class="stat-card">
-            <div class="stat-icon blue">
+            <div class="stat-icon green">
                 <i class="bi bi-chat-left-text"></i>
             </div>
             <div class="stat-info">
@@ -30,18 +30,18 @@
     </div>
     <div class="col-6 col-lg-3">
         <div class="stat-card">
-            <div class="stat-icon yellow">
+            <div class="stat-icon purple">
                 <i class="bi bi-box-seam"></i>
             </div>
             <div class="stat-info">
                 <h3>{{ total_products }}</h3>
-                <p>Produk</p>
+                <p>Produk Aktif</p>
             </div>
         </div>
     </div>
     <div class="col-6 col-lg-3">
         <div class="stat-card">
-            <div class="stat-icon red">
+            <div class="stat-icon yellow">
                 <i class="bi bi-exclamation-triangle"></i>
             </div>
             <div class="stat-info">
@@ -53,103 +53,95 @@
 </div>
 
 <div class="row g-4">
-    <!-- AI Status + Quick Actions -->
+    <!-- Left: AI Status + WhatsApp -->
     <div class="col-lg-7">
+        <!-- AI Status -->
         <div class="card">
             <div class="card-header">
-                <i class="bi bi-robot me-2" style="color:var(--accent);"></i>AI Agent Status
+                <i class="bi bi-robot" style="color:var(--gemini-blue);"></i>
+                AI Agent Status
             </div>
             <div class="card-body">
-                <div class="row align-items-center mb-4">
-                    <div class="col-auto">
-                        <div class="stat-icon green">
-                            <i class="bi bi-check-circle-fill"></i>
-                        </div>
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <div class="stat-icon green" style="width:48px;height:48px;">
+                        <i class="bi bi-check-circle-fill"></i>
                     </div>
-                    <div class="col">
+                    <div class="flex-grow-1">
                         <h6 class="mb-0">Gemini AI Online</h6>
                         <small style="color:var(--text-muted);">Siap melayani customer 24/7</small>
                     </div>
-                    <div class="col-auto">
-                        <span class="badge" style="background:var(--accent-soft);color:var(--accent);">
-                            <i class="bi bi-lightning-fill me-1"></i>Active
-                        </span>
-                    </div>
+                    <span class="badge" style="background:rgba(52,168,83,0.12);color:#34A853;">
+                        <i class="bi bi-lightning-fill me-1"></i>Active
+                    </span>
                 </div>
                 
-                <div class="row text-center">
+                <div class="row g-3">
                     <div class="col-4">
-                        <div style="background:var(--bg-secondary);border-radius:var(--radius-md);padding:16px;">
-                            <h4 class="mb-0" style="color:var(--success);font-family:'Fira Code',monospace;">99.9%</h4>
-                            <small style="color:var(--text-muted);font-size:0.72rem;">Uptime</small>
+                        <div style="background:var(--bg-surface);border-radius:var(--radius);padding:14px;text-align:center;">
+                            <div style="font-size:1.3rem;font-weight:700;color:#34A853;">99.9%</div>
+                            <div style="font-size:0.68rem;color:var(--text-muted);margin-top:2px;">Uptime</div>
                         </div>
                     </div>
                     <div class="col-4">
-                        <div style="background:var(--bg-secondary);border-radius:var(--radius-md);padding:16px;">
-                            <h4 class="mb-0" style="color:var(--info);font-family:'Fira Code',monospace;">&lt;2s</h4>
-                            <small style="color:var(--text-muted);font-size:0.72rem;">Response</small>
+                        <div style="background:var(--bg-surface);border-radius:var(--radius);padding:14px;text-align:center;">
+                            <div style="font-size:1.3rem;font-weight:700;color:#4285F4;">&lt;2s</div>
+                            <div style="font-size:0.68rem;color:var(--text-muted);margin-top:2px;">Response</div>
                         </div>
                     </div>
                     <div class="col-4">
-                        <div style="background:var(--bg-secondary);border-radius:var(--radius-md);padding:16px;">
-                            <h4 class="mb-0" style="color:var(--warning);font-family:'Fira Code',monospace;">{{ week_orders }}</h4>
-                            <small style="color:var(--text-muted);font-size:0.72rem;">Orders</small>
+                        <div style="background:var(--bg-surface);border-radius:var(--radius);padding:14px;text-align:center;">
+                            <div style="font-size:1.3rem;font-weight:700;color:#FBBC05;">{{ week_orders }}</div>
+                            <div style="font-size:0.68rem;color:var(--text-muted);margin-top:2px;">Orders</div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
         
-        <!-- WhatsApp Integration -->
+        <!-- WhatsApp -->
         <div class="card">
             <div class="card-header">
-                <i class="bi bi-whatsapp me-2" style="color:#25D366;"></i>WhatsApp Integration
+                <i class="bi bi-whatsapp" style="color:#25D366;"></i>
+                WhatsApp Integration
             </div>
             <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col">
-                        <p class="mb-1" style="font-size:0.9rem;">AI otomatis balas pesan WhatsApp masuk</p>
-                        <small style="color:var(--text-muted);font-family:'Fira Code',monospace;font-size:0.72rem;">
-                            Webhook: {{ request.host_url }}webhook
-                        </small>
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <p class="mb-1" style="font-size:0.88rem;">AI otomatis balas pesan WhatsApp masuk</p>
+                        <code style="font-size:0.72rem;color:var(--text-muted);background:var(--bg-surface);padding:3px 8px;border-radius:4px;">{{ request.host_url }}webhook</code>
                     </div>
-                    <div class="col-auto">
-                        <span class="badge" style="background:rgba(37,211,102,0.15);color:#25D366;">
-                            <i class="bi bi-check-circle me-1"></i>Connected
-                        </span>
-                    </div>
+                    <span class="badge" style="background:rgba(37,211,102,0.12);color:#25D366;">
+                        <i class="bi bi-check-circle me-1"></i>Connected
+                    </span>
                 </div>
             </div>
         </div>
     </div>
     
-    <!-- Quick Actions -->
+    <!-- Right: Quick Actions -->
     <div class="col-lg-5">
         <div class="card">
             <div class="card-header">
-                <i class="bi bi-lightning me-2" style="color:var(--warning);"></i>Aksi Cepat
+                <i class="bi bi-lightning" style="color:#FBBC05;"></i>
+                Aksi Cepat
             </div>
             <div class="card-body">
-                <div class="d-grid gap-3">
-                    <a href="{{ url_for('product_create') }}" class="btn btn-outline-light text-start py-3">
-                        <i class="bi bi-plus-circle me-2" style="color:var(--accent);"></i>
-                        <span>Tambah Produk Baru</span>
-                        <i class="bi bi-chevron-right float-end mt-1" style="color:var(--text-muted);"></i>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('product_create') }}" class="btn btn-outline-light text-start d-flex align-items-center justify-content-between py-3">
+                        <span><i class="bi bi-plus-circle me-2" style="color:#34A853;"></i>Tambah Produk Baru</span>
+                        <i class="bi bi-chevron-right" style="color:var(--text-muted);font-size:0.8rem;"></i>
                     </a>
-                    <a href="{{ url_for('demo_page') }}" class="btn btn-primary text-start py-3">
-                        <i class="bi bi-play-circle me-2"></i>
-                        <span>Coba Demo AI</span>
-                        <i class="bi bi-chevron-right float-end mt-1" style="opacity:0.7;"></i>
+                    <a href="{{ url_for('demo_page') }}" class="btn btn-primary text-start d-flex align-items-center justify-content-between py-3">
+                        <span><i class="bi bi-play-circle me-2"></i>Coba Demo AI</span>
+                        <i class="bi bi-chevron-right" style="opacity:0.7;font-size:0.8rem;"></i>
                     </a>
-                    <a href="{{ url_for('conversations_list') }}" class="btn btn-outline-light text-start py-3">
-                        <i class="bi bi-chat-left-text me-2" style="color:var(--info);"></i>
-                        <span>Lihat Percakapan</span>
-                        <i class="bi bi-chevron-right float-end mt-1" style="color:var(--text-muted);"></i>
+                    <a href="{{ url_for('conversations_list') }}" class="btn btn-outline-light text-start d-flex align-items-center justify-content-between py-3">
+                        <span><i class="bi bi-chat-left-text me-2" style="color:#4285F4;"></i>Lihat Percakapan</span>
+                        <i class="bi bi-chevron-right" style="color:var(--text-muted);font-size:0.8rem;"></i>
                     </a>
-                    <a href="{{ url_for('settings_page') }}" class="btn btn-outline-light text-start py-3">
-                        <i class="bi bi-gear me-2" style="color:var(--text-muted);"></i>
-                        <span>Pengaturan</span>
-                        <i class="bi bi-chevron-right float-end mt-1" style="color:var(--text-muted);"></i>
+                    <a href="{{ url_for('settings_page') }}" class="btn btn-outline-light text-start d-flex align-items-center justify-content-between py-3">
+                        <span><i class="bi bi-gear me-2" style="color:var(--text-muted);"></i>Pengaturan</span>
+                        <i class="bi bi-chevron-right" style="color:var(--text-muted);font-size:0.8rem;"></i>
                     </a>
                 </div>
             </div>
@@ -161,37 +153,37 @@
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
         <span><i class="bi bi-chat-left-text me-2"></i>Percakapan Terbaru</span>
-        <a href="{{ url_for('conversations_list') }}" class="btn btn-sm btn-outline-light" style="font-size:0.75rem;">
+        <a href="{{ url_for('conversations_list') }}" class="btn btn-sm btn-outline-light" style="font-size:0.72rem;">
             Lihat Semua <i class="bi bi-arrow-right ms-1"></i>
         </a>
     </div>
     <div class="card-body p-0">
         {% if recent_conversations %}
             {% for conv in recent_conversations %}
-            <div class="conversation-item">
-                <div class="conversation-avatar">
+            <div class="conv-item">
+                <div class="conv-avatar">
                     {{ conv.customer_name[0] if conv.customer_name else conv.customer_phone[-2:] }}
                 </div>
-                <div class="conversation-info">
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                        <div class="conversation-name">
+                <div class="conv-body">
+                    <div class="conv-header">
+                        <span class="conv-name">
                             {{ conv.customer_name or 'Customer' }}
-                            <span class="badge bg-secondary ms-2" style="font-size:0.6rem;">{{ conv.intent }}</span>
-                        </div>
-                        <div class="conversation-time">{{ conv.created_at|timeago }}</div>
+                            <span class="badge bg-secondary ms-2" style="font-size:0.58rem;">{{ conv.intent }}</span>
+                        </span>
+                        <span class="conv-time">{{ conv.created_at|timeago }}</span>
                     </div>
-                    <div class="conversation-preview">
-                        <strong style="color:var(--text-muted);">In:</strong> {{ conv.message_in[:60] }}{% if conv.message_in|length > 60 %}...{% endif %}
+                    <div class="conv-preview">
+                        <span style="color:var(--text-muted);">In:</span> {{ conv.message_in[:50] }}{% if conv.message_in|length > 50 %}...{% endif %}
                         <br>
-                        <strong style="color:var(--accent);">AI:</strong> {{ conv.message_out[:60] }}{% if conv.message_out|length > 60 %}...{% endif %}
+                        <span style="color:#8ab4f8;">AI:</span> {{ conv.message_out[:50] }}{% if conv.message_out|length > 50 %}...{% endif %}
                     </div>
                 </div>
             </div>
             {% endfor %}
         {% else %}
             <div class="text-center py-5">
-                <i class="bi bi-chat-dots" style="font-size:3rem;color:var(--text-muted);"></i>
-                <p class="mt-3" style="color:var(--text-muted);">Belum ada percakapan</p>
+                <i class="bi bi-chat-dots" style="font-size:2.5rem;color:var(--text-muted);"></i>
+                <p class="mt-2" style="color:var(--text-muted);font-size:0.88rem;">Belum ada percakapan</p>
             </div>
         {% endif %}
     </div>

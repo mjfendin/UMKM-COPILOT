@@ -1,16 +1,16 @@
 {% extends "base.html" %}
 
-{% block title %}Demo - UMKM Copilot{% endblock %}
+{% block title %}Demo AI - UMKM Copilot{% endblock %}
 {% block page_title %}Demo AI Agent{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-lg-8 mx-auto">
-        <!-- Demo Info -->
-        <div class="card mb-4">
-            <div class="card-body text-center">
-                <h5 class="mb-2"><i class="bi bi-robot text-success me-2"></i>Interactive Demo</h5>
-                <p class="text-muted mb-0">Coba berinteraksi dengan AI Agent UMKM Copilot. Ketik pesan seperti customer biasa!</p>
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <!-- Header -->
+        <div class="card mb-4" style="border:none;background:var(--gradient-primary);overflow:hidden;">
+            <div class="card-body text-center py-4">
+                <h5 class="text-white mb-1"><i class="bi bi-robot me-2"></i>Interactive Demo</h5>
+                <p class="mb-0" style="color:rgba(255,255,255,0.8);font-size:0.88rem;">Coba berinteraksi dengan AI Agent UMKM Copilot</p>
             </div>
         </div>
         
@@ -19,39 +19,39 @@
             <div class="chat-window">
                 <div class="chat-header">
                     <div class="chat-header-avatar">
-                        <i class="bi bi-robot"></i>
+                        <i class="bi bi-stars"></i>
                     </div>
-                    <div>
-                        <div class="fw-bold">UMKM Copilot AI</div>
-                        <small style="opacity: 0.8;">Online • Powered by Gemini</small>
+                    <div class="chat-header-info">
+                        <div class="chat-header-name">UMKM Copilot AI</div>
+                        <div class="chat-header-status">Online • Powered by Gemini</div>
                     </div>
                 </div>
                 
                 <div class="chat-messages" id="chatMessages">
-                    <div class="chat-message incoming">
-                        <strong>Toko Berkah Jaya</strong><br>
+                    <div class="chat-msg in">
+                        <div style="font-weight:600;margin-bottom:4px;font-size:0.78rem;color:var(--gemini-blue);">Toko Berkah Jaya</div>
                         Halo! 👋 Selamat datang di Toko Berkah Jaya. Ada yang bisa kami bantu? 😊
                     </div>
                 </div>
                 
-                <div class="chat-input">
+                <div class="chat-input-bar">
                     <input type="text" class="form-control" id="chatInput" 
                            placeholder="Ketik pesan Anda..." 
                            onkeypress="if(event.key==='Enter')sendMessage()">
-                    <button class="btn btn-primary" onclick="sendMessage()">
-                        <i class="bi bi-send"></i>
+                    <button class="btn btn-primary" onclick="sendMessage()" style="padding:10px 16px;">
+                        <i class="bi bi-send-fill"></i>
                     </button>
                 </div>
             </div>
         </div>
         
-        <!-- Quick Actions -->
+        <!-- Quick Questions -->
         <div class="card mt-4">
             <div class="card-header">
-                <i class="bi bi-lightning me-2"></i>Coba Sekarang
+                <i class="bi bi-lightning" style="color:#FBBC05;"></i>
+                Coba Sekarang
             </div>
             <div class="card-body">
-                <p class="text-muted mb-3">Klik salah satu pertanyaan di bawah untuk mencoba:</p>
                 <div class="d-flex flex-wrap gap-2">
                     <button class="btn btn-outline-light btn-sm" onclick="quickAsk('Halo, ada produk apa saja?')">
                         📦 Lihat Produk
@@ -63,12 +63,12 @@
                         📊 Cek Stok
                     </button>
                     <button class="btn btn-outline-light btn-sm" onclick="quickAsk('Saya mau pesan dress wanita')">
-                        🛒 Pesan Produk
+                        🛒 Pesan
                     </button>
                     <button class="btn btn-outline-light btn-sm" onclick="quickAsk('Toko buka jam berapa?')">
                         🏪 Info Toko
                     </button>
-                    <button class="btn btn-outline-light btn-sm" onclick="quickAsk('Rekomendasi aksesoris yang murah')">
+                    <button class="btn btn-outline-light btn-sm" onclick="quickAsk('Rekomendasi aksesoris murah')">
                         ✨ Rekomendasi
                     </button>
                 </div>
@@ -78,30 +78,31 @@
         <!-- How It Works -->
         <div class="card mt-4">
             <div class="card-header">
-                <i class="bi bi-info-circle me-2"></i>Bagaimana AI Bekerja
+                <i class="bi bi-info-circle" style="color:#4285F4;"></i>
+                Cara Kerja AI
             </div>
             <div class="card-body">
-                <div class="row text-center">
-                    <div class="col-md-4 mb-3">
-                        <div class="stat-icon green mx-auto mb-3">
+                <div class="row text-center g-4">
+                    <div class="col-md-4">
+                        <div class="stat-icon blue mx-auto mb-3" style="width:56px;height:56px;font-size:1.4rem;">
                             <i class="bi bi-chat-left-text"></i>
                         </div>
-                        <h6>1. Customer Chat</h6>
-                        <small class="text-muted">Customer mengirim pesan via WhatsApp</small>
+                        <h6 style="font-size:0.88rem;">1. Customer Chat</h6>
+                        <small style="color:var(--text-muted);font-size:0.78rem;">Customer kirim pesan via WhatsApp</small>
                     </div>
-                    <div class="col-md-4 mb-3">
-                        <div class="stat-icon blue mx-auto mb-3">
+                    <div class="col-md-4">
+                        <div class="stat-icon purple mx-auto mb-3" style="width:56px;height:56px;font-size:1.4rem;">
                             <i class="bi bi-cpu"></i>
                         </div>
-                        <h6>2. AI Analisis</h6>
-                        <small class="text-muted">Gemini AI menganalisis intent & context</small>
+                        <h6 style="font-size:0.88rem;">2. AI Analisis</h6>
+                        <small style="color:var(--text-muted);font-size:0.78rem;">Gemini menganalisis intent & context</small>
                     </div>
-                    <div class="col-md-4 mb-3">
-                        <div class="stat-icon yellow mx-auto mb-3">
+                    <div class="col-md-4">
+                        <div class="stat-icon green mx-auto mb-3" style="width:56px;height:56px;font-size:1.4rem;">
                             <i class="bi bi-reply-all"></i>
                         </div>
-                        <h6>3. Auto Reply</h6>
-                        <small class="text-muted">Respon otomatis yang relevan & personal</small>
+                        <h6 style="font-size:0.88rem;">3. Auto Reply</h6>
+                        <small style="color:var(--text-muted);font-size:0.78rem;">Respon otomatis yang relevan</small>
                     </div>
                 </div>
             </div>
@@ -117,12 +118,10 @@
         const message = input.value.trim();
         if (!message) return;
         
-        // Add user message
-        addMessage(message, 'outgoing');
+        addMsg(message, 'out');
         input.value = '';
         
-        // Show typing indicator
-        const typingId = addMessage('<span class="spinner-border spinner-border-sm me-2"></span>Mengetik...', 'incoming');
+        const typingId = addMsg('<span class="spinner-border spinner-border-sm me-2"></span>Mengetik...', 'in');
         
         try {
             const resp = await fetch('/demo/test', {
@@ -132,29 +131,28 @@
             });
             const data = await resp.json();
             
-            // Remove typing, add response
             document.getElementById(typingId).remove();
-            addMessage(data.response, 'incoming');
+            addMsg(data.response, 'in');
         } catch (err) {
             document.getElementById(typingId).remove();
-            addMessage('Maaf, terjadi error. Coba lagi ya! 🙏', 'incoming');
+            addMsg('Maaf, terjadi error. Coba lagi ya! 🙏', 'in');
         }
     }
     
-    function addMessage(text, type) {
+    function addMsg(text, type) {
         const container = document.getElementById('chatMessages');
         const div = document.createElement('div');
         const id = 'msg-' + Date.now();
         div.id = id;
-        div.className = `chat-message ${type}`;
+        div.className = `chat-msg ${type}`;
         div.innerHTML = text;
         container.appendChild(div);
         container.scrollTop = container.scrollHeight;
         return id;
     }
     
-    function quickAsk(question) {
-        document.getElementById('chatInput').value = question;
+    function quickAsk(q) {
+        document.getElementById('chatInput').value = q;
         sendMessage();
     }
 </script>
