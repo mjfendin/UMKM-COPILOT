@@ -15,12 +15,21 @@ def get_firestore():
     if _firestore_client is None:
         try:
             from google.cloud import firestore
-            # Try service account from env
+            import json
+            
+            # Try JSON env var first (Vercel)
+            creds_json = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS_JSON', '')
             project_id = os.environ.get('FIRESTORE_PROJECT_ID', '')
-            if project_id:
+            
+            if creds_json and project_id:
+                creds_dict = json.loads(creds_json)
+                from google.oauth2 import service_account
+                creds = service_account.Credentials.from_service_account_info(creds_dict)
+                _firestore_client = firestore.Client(project=project_id, credentials=creds)
+            elif project_id:
+                # Try default credentials
                 _firestore_client = firestore.Client(project=project_id)
             else:
-                # Try default credentials (Vercel with Firebase integration)
                 _firestore_client = firestore.Client()
         except Exception as e:
             print(f"Firestore init error: {e}")
