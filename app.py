@@ -252,30 +252,32 @@ TOTAL PRODUK: {len(products)}
         import random
         msg_lower = message.lower()
         
-        # Store info (check FIRST before product matching)
+        # Store info (check FIRST)
         if any(k in msg_lower for k in ['alamat', 'lokasi', 'kontak', 'jam buka', 'buka jam', 'toko buka', 'tutup', 'jam berapa']):
             return f"📍 {shop.name}\n🏠 {shop.address}\n🕐 Jam: {shop.open_hours} - {shop.close_hours}\n📞 {shop.phone}\n📱 WA: {shop.whatsapp_number}"
         
         # Order
         if any(k in msg_lower for k in ['pesan', 'order', 'beli', 'checkout']):
-            # Check if specific product is mentioned
             for p in products:
                 if any(word in msg_lower for word in p.name.lower().split()):
                     if p.stock > 0:
                         return f"✅ Pesanan {p.name} sudah kami catat!\n💰 Harga: Rp {p.price:,.0f}\n📦 Stok: {p.stock} unit\n\nUntuk konfirmasi, chat langsung:\n📱 WA: {shop.whatsapp_number or shop.phone}\n\nTerima kasih Kak! 😊"
                     else:
                         return f"Maaf Kak, {p.name} lagi kosong 😔\nKami bisa kabarin kalau sudah restok ya?"
-            # No specific product matched
             return "Produk apa yang mau dipesan Kak? 😊\nContoh: PESAN [nama produk]"
         
-        # Greeting
-        if any(k in msg_lower for k in ['halo', 'hai', 'hello', 'hi', 'pagi', 'siang', 'sore', 'malam']):
-            return f"Halo Kak! 👋 Selamat datang di {shop.name}. Ada yang bisa kami bantu hari ini? 😊"
+        # Product list (check BEFORE greeting)
+        if any(k in msg_lower for k in ['produk', 'apa saja', 'daftar', 'catalog', 'katalog', 'list']):
+            plist = "\n".join([f"• {p.name} - Rp {p.price:,.0f} (Stok: {p.stock})" for p in products[:6]])
+            return f"Produk {shop.name} Kak:\n{plist}\n\nMau tanya yang mana? 😊"
         
-        # Product list
-        if any(k in msg_lower for k in ['produk', 'apa saja', 'daftar', 'catalog', 'katalog']):
-            plist = "\n".join([f"• {p.name} - Rp {p.price:,.0f}" for p in products[:5]])
-            return f"Produk kami Kak:\n{plist}\n\nMau lihat yang mana? 😊"
+        # Greeting (AFTER product check)
+        if any(k in msg_lower for k in ['halo', 'hai', 'hello', 'hi', 'pagi', 'siang', 'sore', 'malam']):
+            # If also mentions product, show products
+            if any(k in msg_lower for k in ['produk', 'apa', 'ada']):
+                plist = "\n".join([f"• {p.name} - Rp {p.price:,.0f} (Stok: {p.stock})" for p in products[:6]])
+                return f"Produk {shop.name} Kak:\n{plist}\n\nMau tanya yang mana? 😊"
+            return f"Halo Kak! 👋 Selamat datang di {shop.name}. Ada yang bisa kami bantu hari ini? 😊"
         
         # Recommendation
         if any(k in msg_lower for k in ['rekomendasi', 'saran', 'recommend', 'cocok']):
