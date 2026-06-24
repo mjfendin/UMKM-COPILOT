@@ -3,42 +3,65 @@
 {% block page_title %}Produk{% endblock %}
 
 {% block content %}
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-    <span style="font-size:.82rem;color:var(--c-text-3);">{{ products|length }} produk terdaftar</span>
-    <a href="{{ url_for('product_create') }}" class="btn btn-primary btn-sm"><i class="bi bi-plus"></i> Tambah</a>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+    <div style="font-size:.78rem;color:var(--c-text-2);">{{ products|length }} produk</div>
+    <a href="{{ url_for('product_create') }}" class="btn btn-primary btn-sm"><i class="bi bi-plus"></i> Tambah Produk</a>
 </div>
 
+{% if products %}
+<div style="display:grid;gap:12px;">
+    {% for p in products %}
+    <div class="card" style="overflow:hidden;">
+        <div style="display:flex;gap:12px;">
+            {% if p.image_url %}
+            <div style="width:80px;height:80px;flex-shrink:0;background:var(--c-bg);display:flex;align-items:center;justify-content:center;border-radius:8px 0 0 8px;overflow:hidden;">
+                <img src="{{ p.image_url }}" style="width:100%;height:100%;object-fit:cover;" alt="{{ p.name }}">
+            </div>
+            {% else %}
+            <div style="width:80px;height:80px;flex-shrink:0;background:var(--c-bg);display:flex;align-items:center;justify-content:center;border-radius:8px 0 0 8px;">
+                <i class="bi bi-box" style="font-size:1.5rem;color:var(--c-text-3);"></i>
+            </div>
+            {% endif %}
+            
+            <div style="flex:1;padding:12px 12px 12px 0;">
+                <div style="display:flex;justify-content:space-between;align-items:start;">
+                    <div>
+                        <div style="font-weight:600;font-size:.88rem;">{{ p.name }}</div>
+                        <div style="font-size:.72rem;color:var(--c-text-3);">{{ p.category }}</div>
+                    </div>
+                    <div style="display:flex;gap:4px;">
+                        <a href="{{ url_for('product_edit', product_id=p.id) }}" class="btn btn-ghost btn-sm" style="padding:4px 8px;"><i class="bi bi-pencil"></i></a>
+                        <form method="POST" action="{{ url_for('product_delete', product_id=p.id) }}" style="margin:0;" onsubmit="return confirm('Hapus produk ini?')">
+                            <button type="submit" class="btn btn-ghost btn-sm" style="padding:4px 8px;color:var(--c-red);"><i class="bi bi-trash"></i></button>
+                        </form>
+                    </div>
+                </div>
+                
+                {% if p.description %}
+                <div style="font-size:.72rem;color:var(--c-text-2);margin-top:4px;">{{ p.description[:80] }}{% if p.description|length > 80 %}...{% endif %}</div>
+                {% endif %}
+                
+                {% if p.ai_description %}
+                <div style="font-size:.65rem;color:var(--c-purple);margin-top:4px;"><i class="bi bi-stars"></i> {{ p.ai_description[:60] }}{% if p.ai_description|length > 60 %}...{% endif %}</div>
+                {% endif %}
+                
+                <div style="display:flex;gap:12px;margin-top:8px;font-size:.78rem;">
+                    <span style="font-weight:600;color:var(--c-green);">Rp {{ "{:,.0f}".format(p.price) }}</span>
+                    <span style="color:{{ 'var(--c-red)' if p.stock <= 5 else 'var(--c-text-2)' }}">Stok: {{ p.stock }}</span>
+                    <span style="color:{{ 'var(--c-green)' if p.is_active else 'var(--c-text-3)' }}">{{ 'Aktif' if p.is_active else 'Nonaktif' }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
 <div class="card">
-    <div class="tbl-wrap">
-        <table class="tbl">
-            <thead><tr>
-                <th>Produk</th><th>Kategori</th><th class="tbl-r">Harga</th><th>Stok</th><th>Aksi</th>
-            </tr></thead>
-            <tbody>
-            {% for p in products %}
-            <tr>
-                <td data-label="Produk"><strong>{{ p.name }}</strong><br><span style="font-size:.7rem;color:var(--c-text-3)">{{ p.description[:35] }}{% if p.description|length > 35 %}...{% endif %}</span></td>
-                <td data-label="Kategori"><span class="badge badge-gray">{{ p.category }}</span></td>
-                <td data-label="Harga" class="tbl-r" style="color:var(--c-green);font-weight:600;">{{ p.price|format_rupiah }}</td>
-                <td data-label="Stok">
-                    {% if p.stock <= 0 %}<span class="badge badge-red">Habis</span>
-                    {% elif p.stock <= 5 %}<span class="badge badge-yellow">{{ p.stock }}</span>
-                    {% else %}<span class="badge badge-green">{{ p.stock }}</span>{% endif %}
-                </td>
-                <td data-label="Aksi">
-                    <a href="{{ url_for('product_edit', product_id=p.id) }}" class="btn btn-ghost btn-sm" style="padding:4px 8px;"><i class="bi bi-pencil"></i></a>
-                    <form method="POST" action="{{ url_for('product_delete', product_id=p.id) }}" style="display:inline;" onsubmit="return confirm('Hapus?')">
-                        <button class="btn btn-ghost btn-sm" style="padding:4px 8px;color:var(--c-red);"><i class="bi bi-trash"></i></button>
-                    </form>
-                </td>
-            </tr>
-            {% endfor %}
-            </tbody>
-        </table>
+    <div class="card-body" style="text-align:center;padding:32px;">
+        <i class="bi bi-box" style="font-size:2rem;color:var(--c-text-3);"></i>
+        <div style="font-size:.88rem;color:var(--c-text-3);margin-top:8px;">Belum ada produk</div>
+        <a href="{{ url_for('product_create') }}" class="btn btn-primary btn-sm" style="margin-top:12px;"><i class="bi bi-plus"></i> Tambah Produk</a>
     </div>
 </div>
-
-{% if not products %}
-<div class="empty"><i class="bi bi-box-seam"></i>Belum ada produk<br><a href="{{ url_for('product_create') }}" style="color:var(--c-blue);font-size:.82rem;">Tambah Produk Pertama →</a></div>
 {% endif %}
 {% endblock %}

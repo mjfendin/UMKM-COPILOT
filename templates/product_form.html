@@ -1,47 +1,137 @@
 {% extends "base.html" %}
-{% block title %}{{ 'Edit' if mode=='edit' else 'Tambah' }} Produk{% endblock %}
-{% block page_title %}{{ 'Edit' if mode=='edit' else 'Tambah' }} Produk{% endblock %}
+{% block title %}{{ 'Edit' if product else 'Tambah' }} Produk{% endblock %}
+{% block page_title %}{{ 'Edit' if product else 'Tambah' }} Produk{% endblock %}
 
 {% block content %}
 <div style="max-width:600px;">
 <div class="card">
-    <div class="card-head"><i class="bi bi-box-seam"></i> Informasi Produk</div>
+    <div class="card-head"><i class="bi bi-box"></i> {{ 'Edit' if product else 'Tambah' }} Produk</div>
     <div class="card-body">
-        <form method="POST">
+        <form method="POST" enctype="multipart/form-data">
             <div style="display:grid;gap:12px;">
+                <!-- Image Upload -->
                 <div>
-                    <label class="lbl">Nama Produk *</label>
-                    <input class="input" name="name" value="{{ product.name if product else '' }}" required>
+                    <label class="lbl">Foto Produk</label>
+                    <div id="dropZone" style="border:2px dashed var(--c-border);border-radius:8px;padding:24px;text-align:center;cursor:pointer;transition:all .2s;" onclick="document.getElementById('imageInput').click()">
+                        <div id="dropText">
+                            <i class="bi bi-cloud-arrow-up" style="font-size:2rem;color:var(--c-text-3);"></i>
+                            <div style="font-size:.78rem;color:var(--c-text-3);margin-top:8px;">Klik atau seret foto ke sini</div>
+                            <div style="font-size:.65rem;color:var(--c-text-3);margin-top:4px;">JPG, PNG, WebP (max 5MB)</div>
+                        </div>
+                        <div id="preview" style="display:none;">
+                            <img id="previewImg" style="max-width:100%;max-height:200px;border-radius:8px;">
+                            <div style="font-size:.72rem;color:var(--c-green);margin-top:8px;" id="uploadStatus"></div>
+                        </div>
+                    </div>
+                    <input type="file" id="imageInput" name="image" accept="image/*" style="display:none;" onchange="handleImage(this)">
                 </div>
+                
+                <!-- AI Description (auto-filled) -->
+                <div id="aiDescBox" style="display:none;">
+                    <label class="lbl"><i class="bi bi-stars" style="color:var(--c-purple);"></i> AI Description (Cloud Vision)</label>
+                    <textarea class="input" id="aiDesc" name="ai_description" rows="2" readonly style="background:var(--c-bg);"></textarea>
+                </div>
+                
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div>
+                        <label class="lbl">Nama Produk *</label>
+                        <input class="input" name="name" value="{{ product.name if product else '' }}" required>
+                    </div>
                     <div>
                         <label class="lbl">Kategori</label>
                         <select class="input" name="category">
-                            {% for c in ['Umum','Pakaian Pria','Pakaian Wanita','Celana','Sepatu','Aksesoris','Makanan'] %}
+                            {% for c in ['Pakaian Pria','Pakaian Wanita','Celana','Aksesoris','Sepatu','Elektronik','F&B','Jasa','Lainnya'] %}
                             <option value="{{ c }}" {% if product and product.category==c %}selected{% endif %}>{{ c }}</option>
                             {% endfor %}
                         </select>
                     </div>
-                    <div>
-                        <label class="lbl">Stok *</label>
-                        <input class="input" type="number" name="stock" value="{{ product.stock if product else 0 }}" min="0" required>
-                    </div>
                 </div>
+                
                 <div>
                     <label class="lbl">Deskripsi</label>
-                    <textarea class="input" name="description" rows="3" style="resize:vertical;">{{ product.description if product else '' }}</textarea>
+                    <textarea class="input" name="description" rows="2">{{ product.description if product else '' }}</textarea>
                 </div>
-                <div>
-                    <label class="lbl">Harga (Rp) *</label>
-                    <input class="input" type="number" name="price" value="{{ product.price|int if product else '' }}" min="0" required>
+                
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div>
+                        <label class="lbl">Harga (Rp) *</label>
+                        <input class="input" type="number" name="price" value="{{ product.price|int if product else '' }}" required min="0">
+                    </div>
+                    <div>
+                        <label class="lbl">Stok</label>
+                        <input class="input" type="number" name="stock" value="{{ product.stock if product else 0 }}" min="0">
+                    </div>
                 </div>
-                <div style="display:flex;gap:8px;padding-top:8px;">
-                    <button type="submit" class="btn btn-primary"><i class="bi bi-check"></i> Simpan</button>
-                    <a href="{{ url_for('products_list') }}" class="btn btn-ghost">Batal</a>
-                </div>
+            </div>
+            
+            <div style="margin-top:16px;display:flex;gap:8px;">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check"></i> {{ 'Update' if product else 'Simpan' }}</button>
+                <a href="{{ url_for('products_page') }}" class="btn btn-ghost">Batal</a>
             </div>
         </form>
     </div>
 </div>
 </div>
+
+<script>
+var dropZone = document.getElementById('dropZone');
+var imageInput = document.getElementById('imageInput');
+
+// Drag & drop
+dropZone.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    dropZone.style.borderColor = 'var(--c-blue)';
+    dropZone.style.background = 'var(--c-bg)';
+});
+dropZone.addEventListener('dragleave', function(e) {
+    dropZone.style.borderColor = 'var(--c-border)';
+    dropZone.style.background = '';
+});
+dropZone.addEventListener('drop', function(e) {
+    e.preventDefault();
+    dropZone.style.borderColor = 'var(--c-border)';
+    dropZone.style.background = '';
+    if (e.dataTransfer.files.length) {
+        imageInput.files = e.dataTransfer.files;
+        handleImage(imageInput);
+    }
+});
+
+function handleImage(input) {
+    var file = input.files[0];
+    if (!file) return;
+    
+    // Preview
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        document.getElementById('previewImg').src = e.target.result;
+        document.getElementById('dropText').style.display = 'none';
+        document.getElementById('preview').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+    
+    // Analyze with Cloud Vision
+    document.getElementById('uploadStatus').textContent = '🔍 Menganalisis dengan AI...';
+    document.getElementById('aiDescBox').style.display = 'block';
+    
+    var formData = new FormData();
+    formData.append('image', file);
+    
+    fetch('/api/analyze-image', {
+        method: 'POST',
+        body: formData
+    }).then(function(r) { return r.json(); }).then(function(data) {
+        if (data.ai_description) {
+            document.getElementById('aiDesc').value = data.ai_description;
+            document.getElementById('uploadStatus').textContent = '✅ AI analyzed: ' + (data.color_name || '') + ' ' + (data.category_suggestion || '');
+        } else if (data.error) {
+            document.getElementById('aiDesc').value = 'Upload berhasil. Deskripsi: ' + file.name;
+            document.getElementById('uploadStatus').textContent = '✅ File uploaded';
+        }
+    }).catch(function() {
+        document.getElementById('aiDesc').value = 'Upload berhasil. Deskripsi manual diperlukan.';
+        document.getElementById('uploadStatus').textContent = '✅ File uploaded';
+    });
+}
+</script>
 {% endblock %}

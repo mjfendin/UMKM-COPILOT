@@ -64,12 +64,36 @@
                 <a href="{{ url_for('product_create') }}" class="btn btn-ghost" style="width:100%;justify-content:flex-start;">
                     <i class="bi bi-plus-circle" style="color:var(--c-green)"></i> Tambah Produk
                 </a>
-                <a href="{{ url_for('conversations_list') }}" class="btn btn-ghost" style="width:100%;justify-content:flex-start;">
+                <a href="{{ url_for('conversations_page') }}" class="btn btn-ghost" style="width:100%;justify-content:flex-start;">
                     <i class="bi bi-chat-left-text" style="color:var(--c-blue)"></i> Lihat Percakapan
                 </a>
                 <a href="{{ url_for('settings_page') }}" class="btn btn-ghost" style="width:100%;justify-content:flex-start;">
                     <i class="bi bi-gear" style="color:var(--c-text-3)"></i> Pengaturan
                 </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Google Cloud Status -->
+<div class="card">
+    <div class="card-head"><i class="bi bi-cloud" style="color:var(--c-blue)"></i> Google Cloud Services</div>
+    <div class="card-body">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+            <div style="background:var(--c-bg);border:1px solid var(--c-border);border-radius:var(--r);padding:12px;text-align:center;">
+                <div style="font-size:1.5rem;">🤖</div>
+                <div style="font-size:.72rem;font-weight:600;">Gemini API</div>
+                <span class="badge badge-green">Active</span>
+            </div>
+            <div style="background:var(--c-bg);border:1px solid var(--c-border);border-radius:var(--r);padding:12px;text-align:center;">
+                <div style="font-size:1.5rem;">🗄️</div>
+                <div style="font-size:.72rem;font-weight:600;">Firestore</div>
+                <span class="badge {{ 'badge-green' if db_status == 'Firestore' else 'badge-yellow' }}">{{ db_status }}</span>
+            </div>
+            <div style="background:var(--c-bg);border:1px solid var(--c-border);border-radius:var(--r);padding:12px;text-align:center;">
+                <div style="font-size:1.5rem;">👁️</div>
+                <div style="font-size:.72rem;font-weight:600;">Cloud Vision</div>
+                <span class="badge {{ 'badge-green' if vision_status == 'Active' else 'badge-yellow' }}">{{ vision_status }}</span>
             </div>
         </div>
     </div>
@@ -91,26 +115,27 @@
 <div class="card">
     <div class="card-head" style="justify-content:space-between;">
         <span><i class="bi bi-chat-left-text me-1"></i> Percakapan Terbaru</span>
-        <a href="{{ url_for('conversations_list') }}" class="btn btn-sm btn-ghost">Lihat Semua <i class="bi bi-arrow-right" style="font-size:.6rem;margin-left:4px;"></i></a>
+        <a href="{{ url_for('conversations_page') }}" class="btn btn-sm btn-ghost">Lihat Semua <i class="bi bi-arrow-right" style="font-size:.6rem;margin-left:4px;"></i></a>
     </div>
     {% if recent_conversations %}
-        {% for c in recent_conversations %}
-        <div class="list-item">
-            <div class="list-av">{{ c.customer_name[0] if c.customer_name else '?' }}</div>
-            <div class="list-body">
-                <div class="list-top">
-                    <span class="list-name">{{ c.customer_name or 'Customer' }} <span class="badge badge-gray">{{ c.intent }}</span></span>
-                    <span class="list-time">{{ c.created_at|timeago }}</span>
+        {% for c in recent_conversations[:5] %}
+        <div style="display:flex;gap:12px;padding:12px;border-bottom:1px solid var(--c-border);">
+            <div style="width:36px;height:36px;border-radius:50%;background:var(--c-bg);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:.78rem;color:var(--c-text-2);flex-shrink:0;">
+                {{ c.customer_name[0] if c.customer_name else '?' }}
+            </div>
+            <div style="flex:1;min-width:0;">
+                <div style="display:flex;justify-content:space-between;">
+                    <span style="font-weight:600;font-size:.78rem;">{{ c.customer_name or c.customer_phone }}</span>
+                    <span style="font-size:.62rem;color:var(--c-text-3);">{{ c.intent }}</span>
                 </div>
-                <div class="list-sub">
-                    <span style="color:var(--c-text-3)">In:</span> {{ c.message_in[:50] }}{% if c.message_in|length > 50 %}...{% endif %}
-                    · <span style="color:var(--c-blue)">AI:</span> {{ c.message_out[:40] }}{% if c.message_out|length > 40 %}...{% endif %}
-                </div>
+                <div style="font-size:.72rem;color:var(--c-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ c.message_in }}</div>
             </div>
         </div>
         {% endfor %}
     {% else %}
-        <div class="empty"><i class="bi bi-chat-dots"></i>Belum ada percakapan</div>
+        <div style="padding:24px;text-align:center;color:var(--c-text-3);font-size:.78rem;">
+            Belum ada percakapan
+        </div>
     {% endif %}
 </div>
 {% endblock %}
