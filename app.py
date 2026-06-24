@@ -587,23 +587,22 @@ def analytics_page():
 def settings_page():
     """Shop settings"""
     shop = get_or_create_shop()
-    if not shop:
-        shop = Shop(name='Toko UMKM', owner_name='', phone='', address='',
-                    category='Retail', whatsapp_number='', ai_enabled=True)
-        db.session.add(shop)
-        db.session.commit()
     
     if request.method == 'POST':
-        shop.name = request.form.get('name', shop.name)
-        shop.owner_name = request.form.get('owner_name', shop.owner_name)
-        shop.phone = request.form.get('phone', shop.phone)
-        shop.address = request.form.get('address', shop.address)
-        shop.category = request.form.get('category', shop.category)
-        shop.whatsapp_number = request.form.get('whatsapp_number', shop.whatsapp_number)
-        shop.ai_enabled = request.form.get('ai_enabled') == 'on'
-        db.session.commit()
+        try:
+            shop.name = request.form.get('name', shop.name)
+            shop.owner_name = request.form.get('owner_name', shop.owner_name)
+            shop.phone = request.form.get('phone', shop.phone)
+            shop.address = request.form.get('address', shop.address)
+            shop.category = request.form.get('category', shop.category)
+            shop.whatsapp_number = request.form.get('whatsapp_number', shop.whatsapp_number)
+            shop.ai_enabled = request.form.get('ai_enabled') == 'on'
+            db.session.commit()
+            flash('Pengaturan berhasil disimpan!', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error: {str(e)}', 'danger')
         
-        flash('Pengaturan berhasil disimpan!', 'success')
         return redirect(url_for('settings_page'))
     
     return render_template('settings.html', shop=shop)
