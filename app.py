@@ -252,6 +252,14 @@ TOTAL PRODUK: {len(products)}
         import random
         msg_lower = message.lower()
         
+        # Store info (check FIRST before product matching)
+        if any(k in msg_lower for k in ['alamat', 'lokasi', 'kontak', 'jam buka', 'buka jam', 'toko buka', 'tutup', 'jam berapa']):
+            return f"📍 {shop.name}\n🏠 {shop.address}\n🕐 Jam: {shop.open_hours} - {shop.close_hours}\n📞 {shop.phone}\n📱 WA: {shop.whatsapp_number}"
+        
+        # Order
+        if any(k in msg_lower for k in ['pesan', 'order', 'beli', 'checkout']):
+            return "Untuk pemesanan, Kakak bisa langsung chat:\n📱 WA: " + (shop.whatsapp_number or shop.phone) + "\n\nAtau ketik: PESAN [nama produk] ya Kak! 😊"
+        
         # Greeting
         if any(k in msg_lower for k in ['halo', 'hai', 'hello', 'hi', 'pagi', 'siang', 'sore', 'malam']):
             return f"Halo Kak! 👋 Selamat datang di {shop.name}. Ada yang bisa kami bantu hari ini? 😊"
@@ -260,6 +268,13 @@ TOTAL PRODUK: {len(products)}
         if any(k in msg_lower for k in ['produk', 'apa saja', 'daftar', 'catalog', 'katalog']):
             plist = "\n".join([f"• {p.name} - Rp {p.price:,.0f}" for p in products[:5]])
             return f"Produk kami Kak:\n{plist}\n\nMau lihat yang mana? 😊"
+        
+        # Recommendation
+        if any(k in msg_lower for k in ['rekomendasi', 'saran', 'recommend', 'cocok']):
+            p = random.choice(products) if products else None
+            if p:
+                return f"Rekomendasi: {p.name} Rp {p.price:,.0f} 🔥\n{p.description}\nMau lihat detail? 😊"
+            return "Tanya produk spesifik ya Kak, nanti kami bantu carikan yang cocok! 😊"
         
         # Price inquiry - match specific product
         for p in products:
@@ -271,7 +286,6 @@ TOTAL PRODUK: {len(products)}
                         return f"{p.name} masih ada {p.stock} unit Kak. Harga Rp {p.price:,.0f}. Mau diorder? 😉"
                     else:
                         return f"Maaf Kak, {p.name} lagi kosong 😔 Kami bisa kabarin kalau sudah restok ya?"
-                # General product mention
                 return f"{p.name} - Rp {p.price:,.0f} (Stok: {p.stock}). Mau yang mana Kak? 😊"
         
         # Generic price inquiry
@@ -284,21 +298,6 @@ TOTAL PRODUK: {len(products)}
         # Stock inquiry
         if any(k in msg_lower for k in ['stok', 'stock', 'ada', 'habis', 'kosong']):
             return "Produk apa yang ingin dicek stoknya Kak? 😊"
-        
-        # Order
-        if any(k in msg_lower for k in ['pesan', 'order', 'beli', 'checkout']):
-            return "Untuk pemesanan, Kakak bisa langsung chat:\n📱 WA: " + (shop.whatsapp_number or shop.phone) + "\n\nAtau ketik: PESAN [nama produk] ya Kak! 😊"
-        
-        # Store info
-        if any(k in msg_lower for k in ['alamat', 'lokasi', 'toko', 'kontak', 'jam buka', 'buka']):
-            return f"📍 {shop.name}\n🏠 {shop.address}\n🕐 Jam: {shop.open_hours} - {shop.close_hours}\n📞 {shop.phone}"
-        
-        # Recommendation
-        if any(k in msg_lower for k in ['rekomendasi', 'saran', 'recommend', 'cocok']):
-            p = random.choice(products) if products else None
-            if p:
-                return f"Rekomendasi: {p.name} Rp {p.price:,.0f} 🔥\n{p.description}\nMau lihat detail? 😊"
-            return "Tanya produk spesifik ya Kak, nanti kami bantu carikan yang cocok! 😊"
         
         # Default
         return f"Makasih Kak! 😊 Ada yang bisa kami bantu soal produk atau info {shop.name}?"
@@ -372,6 +371,14 @@ TOTAL PRODUK: {len(products)}
         """Simple intent detection based on keywords"""
         msg_lower = message.lower()
         
+        # Store info (check first)
+        if any(k in msg_lower for k in ['alamat', 'jam buka', 'lokasi', 'toko', 'kontak', 'buka jam', 'jam berapa']):
+            return 'store_info'
+        
+        # Order
+        if any(k in msg_lower for k in ['pesan', 'order', 'beli', 'checkout', 'bayar']):
+            return 'order'
+        
         for p in products:
             if p.name.lower() in msg_lower:
                 return 'product_inquiry'
@@ -382,14 +389,8 @@ TOTAL PRODUK: {len(products)}
         if any(k in msg_lower for k in ['stok', 'stock', 'ada', 'habis', 'kosong']):
             return 'stock_inquiry'
         
-        if any(k in msg_lower for k in ['pesan', 'order', 'beli', 'checkout', 'bayar']):
-            return 'order'
-        
         if any(k in msg_lower for k in ['halo', 'hai', 'hello', 'hi', 'pagi', 'siang', 'sore', 'malam']):
             return 'greeting'
-        
-        if any(k in msg_lower for k in ['alamat', 'jam buka', 'lokasi', 'toko', 'kontak']):
-            return 'store_info'
         
         return 'general'
 
