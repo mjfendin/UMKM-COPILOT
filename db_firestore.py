@@ -54,11 +54,14 @@ def get_shop(shop_id='default'):
     fs = get_firestore()
     if not fs:
         return None
-    doc = fs.collection('shops').document(str(shop_id)).get()
-    if doc.exists:
-        data = doc.to_dict()
-        data['id'] = doc.id
-        return data
+    try:
+        doc = fs.collection('shops').document(str(shop_id)).get()
+        if doc.exists:
+            data = doc.to_dict()
+            data['id'] = doc.id
+            return data
+    except Exception as e:
+        print(f"Firestore get_shop error: {e}")
     return None
 
 
@@ -83,16 +86,20 @@ def get_products(shop_id='default', active_only=True):
     fs = get_firestore()
     if not fs:
         return []
-    query = fs.collection('shops').document(str(shop_id)).collection('products')
-    if active_only:
-        query = query.where('is_active', '==', True)
-    docs = query.stream()
-    products = []
-    for doc in docs:
-        data = doc.to_dict()
-        data['id'] = doc.id
-        products.append(data)
-    return products
+    try:
+        query = fs.collection('shops').document(str(shop_id)).collection('products')
+        if active_only:
+            query = query.where('is_active', '==', True)
+        docs = query.stream()
+        products = []
+        for doc in docs:
+            data = doc.to_dict()
+            data['id'] = doc.id
+            products.append(data)
+        return products
+    except Exception as e:
+        print(f"Firestore get_products error: {e}")
+        return []
 
 
 def get_product(shop_id, product_id):
@@ -156,14 +163,18 @@ def get_conversations(shop_id, limit=50):
     fs = get_firestore()
     if not fs:
         return []
-    docs = fs.collection('shops').document(str(shop_id)).collection('conversations')\
-        .order_by('created_at', direction='DESCENDING').limit(limit).stream()
-    convs = []
-    for doc in docs:
-        data = doc.to_dict()
-        data['id'] = doc.id
-        convs.append(data)
-    return convs
+    try:
+        docs = fs.collection('shops').document(str(shop_id)).collection('conversations')\
+            .order_by('created_at', direction='DESCENDING').limit(limit).stream()
+        convs = []
+        for doc in docs:
+            data = doc.to_dict()
+            data['id'] = doc.id
+            convs.append(data)
+        return convs
+    except Exception as e:
+        print(f"Firestore get_conversations error: {e}")
+        return []
 
 
 # ============================================================
