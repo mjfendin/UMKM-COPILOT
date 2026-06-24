@@ -258,7 +258,15 @@ TOTAL PRODUK: {len(products)}
         
         # Order
         if any(k in msg_lower for k in ['pesan', 'order', 'beli', 'checkout']):
-            return "Untuk pemesanan, Kakak bisa langsung chat:\n📱 WA: " + (shop.whatsapp_number or shop.phone) + "\n\nAtau ketik: PESAN [nama produk] ya Kak! 😊"
+            # Check if specific product is mentioned
+            for p in products:
+                if any(word in msg_lower for word in p.name.lower().split()):
+                    if p.stock > 0:
+                        return f"✅ Pesanan {p.name} sudah kami catat!\n💰 Harga: Rp {p.price:,.0f}\n📦 Stok: {p.stock} unit\n\nUntuk konfirmasi, chat langsung:\n📱 WA: {shop.whatsapp_number or shop.phone}\n\nTerima kasih Kak! 😊"
+                    else:
+                        return f"Maaf Kak, {p.name} lagi kosong 😔\nKami bisa kabarin kalau sudah restok ya?"
+            # No specific product matched
+            return "Produk apa yang mau dipesan Kak? 😊\nContoh: PESAN [nama produk]"
         
         # Greeting
         if any(k in msg_lower for k in ['halo', 'hai', 'hello', 'hi', 'pagi', 'siang', 'sore', 'malam']):
