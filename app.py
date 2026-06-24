@@ -49,8 +49,11 @@ try:
     from db_firestore import update_product as fs_update_product, delete_product as fs_delete_product
     from db_firestore import save_conversation as fs_save_conversation, get_conversations as fs_get_conversations
     from db_firestore import save_analytics as fs_save_analytics, get_analytics as fs_get_analytics
-    from db_firestore import seed_firestore_data
+    from db_firestore import seed_firestore_data, get_firestore
     HAS_FIRESTORE = is_firestore_available()
+    # Test actual connection
+    if HAS_FIRESTORE and get_firestore() is None:
+        HAS_FIRESTORE = False
 except ImportError:
     HAS_FIRESTORE = False
 
