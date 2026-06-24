@@ -27,10 +27,13 @@ def get_firestore():
                 creds = service_account.Credentials.from_service_account_info(creds_dict)
                 _firestore_client = firestore.Client(project=project_id, credentials=creds)
             elif project_id:
-                # Try default credentials
                 _firestore_client = firestore.Client(project=project_id)
             else:
                 _firestore_client = firestore.Client()
+            
+            # Test connection
+            _firestore_client.collections()
+            
         except Exception as e:
             print(f"Firestore init error: {e}")
             _firestore_client = None
