@@ -338,7 +338,7 @@ def whatsapp_webhook():
             shop = Shop.query.filter_by(whatsapp_number=phone).first()
             if not shop:
                 # Default to first shop for testing
-                shop = Shop.query.first()
+                shop = get_or_create_shop()
             
             if not shop:
                 return 'OK', 200
@@ -416,24 +416,29 @@ def _send_whatsapp_message(phone, message):
 
 
 # ============================================================
+# HELPER: ensure shop exists
+# ============================================================
+def get_or_create_shop():
+    """Get existing shop or create default one"""
+    shop = Shop.query.first()
+    if not shop:
+        shop = Shop(
+            name='Toko UMKM', owner_name='', phone='',
+            address='', category='Retail',
+            whatsapp_number='', ai_enabled=True
+        )
+        db.session.add(shop)
+        db.session.commit()
+    return shop
+
+
+# ============================================================
 # DASHBOARD ROUTES
 # ============================================================
 @app.route('/')
 def index():
     """Main dashboard"""
-    shop = Shop.query.first()
-    if not shop:
-        # Create default shop
-        shop = Shop(
-            name='Toko UMKM Copilot',
-            owner_name='Pengguna UMKM',
-            phone='081234567890',
-            address='Jl. Contoh No. 1, Jakarta',
-            category='Retail',
-            whatsapp_number='6281234567890'
-        )
-        db.session.add(shop)
-        db.session.commit()
+    shop = get_or_create_shop()
     
     # Get stats - use naive dates for SQLite compatibility
     from datetime import date as date_type
@@ -476,7 +481,7 @@ def index():
 @app.route('/products')
 def products_list():
     """Product management page"""
-    shop = Shop.query.first()
+    shop = get_or_create_shop()
     products = Product.query.filter_by(shop_id=shop.id).order_by(Product.name).all()
     return render_template('products.html', shop=shop, products=products)
 
@@ -484,7 +489,7 @@ def products_list():
 @app.route('/products/create', methods=['GET', 'POST'])
 def product_create():
     """Create new product"""
-    shop = Shop.query.first()
+    shop = get_or_create_shop()
     
     if request.method == 'POST':
         product = Product(
@@ -508,7 +513,7 @@ def product_create():
 @app.route('/products/<int:product_id>/edit', methods=['GET', 'POST'])
 def product_edit(product_id):
     """Edit product"""
-    shop = Shop.query.first()
+    shop = get_or_create_shop()
     product = Product.query.get_or_404(product_id)
     
     if request.method == 'POST':
@@ -539,7 +544,7 @@ def product_delete(product_id):
 @app.route('/conversations')
 def conversations_list():
     """Conversation history"""
-    shop = Shop.query.first()
+    shop = get_or_create_shop()
     convs = Conversation.query.filter_by(shop_id=shop.id)\
         .order_by(Conversation.created_at.desc()).limit(50).all()
     return render_template('conversations.html', shop=shop, conversations=convs)
@@ -548,7 +553,7 @@ def conversations_list():
 @app.route('/analytics')
 def analytics_page():
     """Analytics dashboard"""
-    shop = Shop.query.first()
+    shop = get_or_create_shop()
     
     # Last 7 days
     today = datetime.now(timezone.utc).date()
@@ -581,7 +586,12 @@ def analytics_page():
 @app.route('/settings', methods=['GET', 'POST'])
 def settings_page():
     """Shop settings"""
-    shop = Shop.query.first()
+    shop = get_or_create_shop()
+    if not shop:
+        shop = Shop(name='Toko UMKM', owner_name='', phone='', address='',
+                    category='Retail', whatsapp_number='', ai_enabled=True)
+        db.session.add(shop)
+        db.session.commit()
     
     if request.method == 'POST':
         shop.name = request.form.get('name', shop.name)
@@ -593,7 +603,7 @@ def settings_page():
         shop.ai_enabled = request.form.get('ai_enabled') == 'on'
         db.session.commit()
         
-        flash('Pengaturan berhasil disimpan! ⚙️', 'success')
+        flash('Pengaturan berhasil disimpan!', 'success')
         return redirect(url_for('settings_page'))
     
     return render_template('settings.html', shop=shop)
@@ -605,7 +615,7 @@ def settings_page():
 @app.route('/api/products', methods=['GET'])
 def api_products():
     """API: List products"""
-    shop = Shop.query.first()
+    shop = get_or_create_shop()
     products = Product.query.filter_by(shop_id=shop.id, is_active=True).all()
     return jsonify([p.to_dict() for p in products])
 
@@ -614,7 +624,7 @@ def api_products():
 def api_product_create():
     """API: Create product"""
     data = request.get_json()
-    shop = Shop.query.first()
+    shop = get_or_create_shop()
     
     product = Product(
         shop_id=shop.id,
@@ -644,7 +654,7 @@ def api_chat():
 @app.route('/api/stats', methods=['GET'])
 def api_stats():
     """API: Get dashboard stats"""
-    shop = Shop.query.first()
+    shop = get_or_create_shop()
     today = datetime.now(timezone.utc).date()
     week_ago = today - timedelta(days=7)
     
@@ -663,7 +673,7 @@ def api_stats():
 @app.route('/demo')
 def demo_page():
     """Interactive demo page for hackathon judges"""
-    shop = Shop.query.first()
+    shop = get_or_create_shop()
     return render_template('demo.html', shop=shop)
 
 
