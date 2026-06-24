@@ -72,29 +72,14 @@
 
 {% block scripts %}
 <script>
-function send() {
-    const inp = document.getElementById('chatIn');
-    const msg = inp.value.trim();
-    if (!msg) return;
-    add(msg, 'out');
-    inp.value = '';
-    const tid = add('<span class="spinner-border spinner-border-sm"></span> Mengetik...', 'in');
-    fetch('/demo/test', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({message: msg})
-    }).then(r => r.json()).then(d => {
-        document.getElementById(tid).remove();
-        add(d.response, 'in');
-    }).catch(() => {
-        document.getElementById(tid).remove();
-        add('Error, coba lagi 🙏', 'in');
-    });
-}
+var _busy = false;
+var _idCounter = 0;
+
 function add(text, type) {
-    const el = document.getElementById('chatBody');
-    const d = document.createElement('div');
-    const id = 'm' + Date.now();
+    var el = document.getElementById('chatBody');
+    var d = document.createElement('div');
+    _idCounter++;
+    var id = 'm' + _idCounter + '_' + Date.now();
     d.id = id;
     d.className = 'chat-msg ' + type;
     d.innerHTML = text;
@@ -102,6 +87,36 @@ function add(text, type) {
     el.scrollTop = el.scrollHeight;
     return id;
 }
-function ask(q) { document.getElementById('chatIn').value = q; send(); }
+
+function send() {
+    if (_busy) return;
+    var inp = document.getElementById('chatIn');
+    var msg = inp.value.trim();
+    if (!msg) return;
+    _busy = true;
+    add(msg, 'out');
+    inp.value = '';
+    var tid = add('<span class="spinner-border spinner-border-sm"></span> Mengetik...', 'in');
+    fetch('/demo/test', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({message: msg})
+    }).then(function(r) { return r.json(); }).then(function(d) {
+        var spinner = document.getElementById(tid);
+        if (spinner) spinner.remove();
+        add(d.response || 'Maaf, ada error 🙏', 'in');
+        _busy = false;
+    }).catch(function() {
+        var spinner = document.getElementById(tid);
+        if (spinner) spinner.remove();
+        add('Error, coba lagi 🙏', 'in');
+        _busy = false;
+    });
+}
+
+function ask(q) {
+    document.getElementById('chatIn').value = q;
+    send();
+}
 </script>
 {% endblock %}
