@@ -578,32 +578,38 @@ def _send_whatsapp_message(phone, message):
 @app.route('/')
 def index():
     """Main dashboard"""
-    shop_data = db_get_shop_dict()
-    products_data = db_get_products_list()
-    
-    from datetime import date as date_type
-    today = date_type.today()
-    week_ago = today - timedelta(days=7)
-    
-    total_products = len([p for p in products_data if p.get('is_active', True)])
-    low_stock = len([p for p in products_data if p.get('is_active', True) and p.get('stock', 0) <= 5])
-    
-    convs = db_get_conversations(30)
-    week_conversations = sum(1 for c in convs if c.get('created_at', '') >= week_ago.isoformat())
-    today_conversations = sum(1 for c in convs if c.get('created_at', '').startswith(today.isoformat()))
-    
-    return render_template('dashboard.html', 
-        shop=shop_data, 
-        total_products=total_products,
-        low_stock=low_stock,
-        week_conversations=week_conversations,
-        today_conversations=today_conversations,
-        recent_conversations=convs[:5],
-        week_orders=0,
-        ai_status='Aktif' if shop_data.get('ai_enabled') else 'Nonaktif',
-        db_status='Firestore' if HAS_FIRESTORE else 'SQLite',
-        vision_status='Active' if HAS_VISION else 'Local Fallback'
-    )
+    try:
+        shop_data = db_get_shop_dict()
+        products_data = db_get_products_list()
+        
+        from datetime import date as date_type
+        today = date_type.today()
+        week_ago = today - timedelta(days=7)
+        
+        total_products = len([p for p in products_data if p.get('is_active', True)])
+        low_stock = len([p for p in products_data if p.get('is_active', True) and p.get('stock', 0) <= 5])
+        
+        convs = db_get_conversations(30)
+        week_conversations = sum(1 for c in convs if str(c.get('created_at', '')) >= week_ago.isoformat())
+        today_conversations = sum(1 for c in convs if str(c.get('created_at', '')).startswith(today.isoformat()))
+        
+        return render_template('dashboard.html', 
+            shop=shop_data, 
+            total_products=total_products,
+            low_stock=low_stock,
+            week_conversations=week_conversations,
+            today_conversations=today_conversations,
+            recent_conversations=convs[:5],
+            week_orders=0,
+            ai_status='Aktif' if shop_data.get('ai_enabled') else 'Nonaktif',
+            db_status='Firestore' if HAS_FIRESTORE else 'SQLite',
+            vision_status='Active' if HAS_VISION else 'Local Fallback'
+        )
+    except Exception as e:
+        print(f"Dashboard error: {e}")
+        import traceback
+        traceback.print_exc()
+        return f"Dashboard Error: {e}", 500
 
 
 # ============================================================
