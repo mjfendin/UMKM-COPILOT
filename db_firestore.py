@@ -20,16 +20,17 @@ def get_firestore():
             # Try JSON env var first (Vercel)
             creds_json = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS_JSON', '')
             project_id = os.environ.get('FIRESTORE_PROJECT_ID', '')
+            database_id = os.environ.get('FIRESTORE_DATABASE_ID', '(default)')
             
             if creds_json and project_id:
                 creds_dict = json.loads(creds_json)
                 from google.oauth2 import service_account
                 creds = service_account.Credentials.from_service_account_info(creds_dict)
-                _firestore_client = firestore.Client(project=project_id, credentials=creds)
+                _firestore_client = firestore.Client(project=project_id, credentials=creds, database=database_id)
             elif project_id:
-                _firestore_client = firestore.Client(project=project_id)
+                _firestore_client = firestore.Client(project=project_id, database=database_id)
             else:
-                _firestore_client = firestore.Client()
+                _firestore_client = firestore.Client(database=database_id)
             
             # Test connection
             _firestore_client.collections()
