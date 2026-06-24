@@ -1,11 +1,12 @@
 {% extends "base.html" %}
-{% block title %}Produk{% endblock %}
-{% block page_title %}Produk{% endblock %}
+{% block title %}{{ t('products.title') }}{% endblock %}
+{% block page_title %}{{ t('products.title') }}{% endblock %}
 
 {% block content %}
+{% set cat_map = {'Pakaian Pria': t('cat.pakaian_pria'), 'Pakaian Wanita': t('cat.pakaian_wanita'), 'Celana': t('cat.celana'), 'Aksesoris': t('cat.aksesoris'), 'Sepatu': t('cat.sepatu'), 'Elektronik': t('cat.elektronik'), 'F&B': t('cat.fnb'), 'Jasa': t('cat.jasa'), 'Lainnya': t('cat.lainnya')} %}
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
-    <div style="font-size:.78rem;color:var(--c-text-2);">{{ products|length }} produk</div>
-    <a href="{{ url_for('product_create') }}" class="btn btn-primary btn-sm"><i class="bi bi-plus"></i> Tambah Produk</a>
+    <div style="font-size:.78rem;color:var(--c-text-2);">{{ products|length }} {{ t('products.count') }}</div>
+    <a href="{{ url_for('product_create') }}" class="btn btn-primary btn-sm"><i class="bi bi-plus"></i> {{ t('products.add') }}</a>
 </div>
 
 {% if products %}
@@ -27,11 +28,11 @@
                 <div style="display:flex;justify-content:space-between;align-items:start;">
                     <div>
                         <div style="font-weight:600;font-size:.88rem;">{{ p.name }}</div>
-                        <div style="font-size:.72rem;color:var(--c-text-3);">{{ p.category }}</div>
+                        <div style="font-size:.72rem;color:var(--c-text-3);">{{ cat_map.get(p.category, p.category) }}</div>
                     </div>
                     <div style="display:flex;gap:4px;">
                         <a href="{{ url_for('product_edit', product_id=p.id) }}" class="btn btn-ghost btn-sm" style="padding:4px 8px;"><i class="bi bi-pencil"></i></a>
-                        <form method="POST" action="{{ url_for('product_delete', product_id=p.id) }}" style="margin:0;" onsubmit="return confirm('Hapus produk ini?')">
+                        <form method="POST" action="{{ url_for('product_delete', product_id=p.id) }}" style="margin:0;" onsubmit="return confirm('{{ t('common.delete') }}?')">
                             <button type="submit" class="btn btn-ghost btn-sm" style="padding:4px 8px;color:var(--c-red);"><i class="bi bi-trash"></i></button>
                         </form>
                     </div>
@@ -47,8 +48,8 @@
                 
                 <div style="display:flex;gap:12px;margin-top:8px;font-size:.78rem;">
                     <span style="font-weight:600;color:var(--c-green);">Rp {{ "{:,.0f}".format(p.price) }}</span>
-                    <span style="color:{{ 'var(--c-red)' if p.stock <= 5 else 'var(--c-text-2)' }}">Stok: {{ p.stock }}</span>
-                    <span style="color:{{ 'var(--c-green)' if p.is_active else 'var(--c-text-3)' }}">{{ 'Aktif' if p.is_active else 'Nonaktif' }}</span>
+                    <span style="color:{{ 'var(--c-red)' if p.stock <= 5 else 'var(--c-text-2)' }}">{{ t('products.stock') }} {{ p.stock }}</span>
+                    <span style="color:{{ 'var(--c-green)' if p.is_active else 'var(--c-text-3)' }}">{{ t('products.active') if p.is_active else t('products.inactive') }}</span>
                 </div>
             </div>
         </div>
@@ -59,8 +60,8 @@
 <div class="card">
     <div class="card-body" style="text-align:center;padding:32px;">
         <i class="bi bi-box" style="font-size:2rem;color:var(--c-text-3);"></i>
-        <div style="font-size:.88rem;color:var(--c-text-3);margin-top:8px;">Belum ada produk</div>
-        <a href="{{ url_for('product_create') }}" class="btn btn-primary btn-sm" style="margin-top:12px;"><i class="bi bi-plus"></i> Tambah Produk</a>
+        <div style="font-size:.88rem;color:var(--c-text-3);margin-top:8px;">{{ t('conv.no_conversations') }}</div>
+        <a href="{{ url_for('product_create') }}" class="btn btn-primary btn-sm" style="margin-top:12px;"><i class="bi bi-plus"></i> {{ t('products.add') }}</a>
     </div>
 </div>
 {% endif %}

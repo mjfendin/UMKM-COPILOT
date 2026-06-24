@@ -1,22 +1,22 @@
 {% extends "base.html" %}
-{% block title %}{{ 'Edit' if product else 'Tambah' }} Produk{% endblock %}
-{% block page_title %}{{ 'Edit' if product else 'Tambah' }} Produk{% endblock %}
+{% block title %}{{ t('products.edit') if product else t('products.add') }}{% endblock %}
+{% block page_title %}{{ t('products.edit') if product else t('products.add') }}{% endblock %}
 
 {% block content %}
 <div style="max-width:600px;">
 <div class="card">
-    <div class="card-head"><i class="bi bi-box"></i> {{ 'Edit' if product else 'Tambah' }} Produk</div>
+    <div class="card-head"><i class="bi bi-box"></i> {{ t('products.edit') if product else t('products.add') }}</div>
     <div class="card-body">
         <form method="POST" enctype="multipart/form-data">
             <div style="display:grid;gap:12px;">
                 <!-- Image Upload -->
                 <div>
-                    <label class="lbl">Foto Produk</label>
+                    <label class="lbl">{{ t('products.form.image') }}</label>
                     <div id="dropZone" style="border:2px dashed var(--c-border);border-radius:8px;padding:24px;text-align:center;cursor:pointer;transition:all .2s;" onclick="document.getElementById('imageInput').click()">
                         <div id="dropText">
                             <i class="bi bi-cloud-arrow-up" style="font-size:2rem;color:var(--c-text-3);"></i>
-                            <div style="font-size:.78rem;color:var(--c-text-3);margin-top:8px;">Klik atau seret foto ke sini</div>
-                            <div style="font-size:.65rem;color:var(--c-text-3);margin-top:4px;">JPG, PNG, WebP (max 5MB)</div>
+                            <div style="font-size:.78rem;color:var(--c-text-3);margin-top:8px;">{{ t('products.form.dropzone') }}</div>
+                            <div style="font-size:.65rem;color:var(--c-text-3);margin-top:4px;">{{ t('products.form.formats') }}</div>
                         </div>
                         <div id="preview" style="display:none;">
                             <img id="previewImg" style="max-width:100%;max-height:200px;border-radius:8px;">
@@ -28,45 +28,46 @@
                 
                 <!-- AI Description (auto-filled) -->
                 <div id="aiDescBox" style="display:none;">
-                    <label class="lbl"><i class="bi bi-stars" style="color:var(--c-purple);"></i> AI Description (Cloud Vision)</label>
+                    <label class="lbl"><i class="bi bi-stars" style="color:var(--c-purple);"></i> {{ t('products.form.ai_desc') }}</label>
                     <textarea class="input" id="aiDesc" name="ai_description" rows="2" readonly style="background:var(--c-bg);"></textarea>
                 </div>
                 
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                     <div>
-                        <label class="lbl">Nama Produk *</label>
+                        <label class="lbl">{{ t('products.form.name') }}</label>
                         <input class="input" name="name" value="{{ product.name if product else '' }}" required>
                     </div>
                     <div>
-                        <label class="lbl">Kategori</label>
+                        <label class="lbl">{{ t('products.form.category') }}</label>
                         <select class="input" name="category">
-                            {% for c in ['Pakaian Pria','Pakaian Wanita','Celana','Aksesoris','Sepatu','Elektronik','F&B','Jasa','Lainnya'] %}
-                            <option value="{{ c }}" {% if product and product.category==c %}selected{% endif %}>{{ c }}</option>
+                            {% set cats = [('Pakaian Pria','products.category.pria'),('Pakaian Wanita','products.category.wanita'),('Celana','products.category.celana'),('Aksesoris','products.category.aksesoris'),('Sepatu','products.category.sepatu'),('Elektronik','products.category.elektronik'),('F&B','products.category.fb'),('Jasa','products.category.jasa'),('Lainnya','products.category.lainnya')] %}
+                            {% for val, key in cats %}
+                            <option value="{{ val }}" {% if product and product.category==val %}selected{% endif %}>{{ t(key) }}</option>
                             {% endfor %}
                         </select>
                     </div>
                 </div>
                 
                 <div>
-                    <label class="lbl">Deskripsi</label>
+                    <label class="lbl">{{ t('products.form.description') }}</label>
                     <textarea class="input" name="description" rows="2">{{ product.description if product else '' }}</textarea>
                 </div>
                 
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                     <div>
-                        <label class="lbl">Harga (Rp) *</label>
+                        <label class="lbl">{{ t('products.form.price') }}</label>
                         <input class="input" type="number" name="price" value="{{ product.price|int if product else '' }}" required min="0">
                     </div>
                     <div>
-                        <label class="lbl">Stok</label>
+                        <label class="lbl">{{ t('products.form.stock') }}</label>
                         <input class="input" type="number" name="stock" value="{{ product.stock if product else 0 }}" min="0">
                     </div>
                 </div>
             </div>
             
             <div style="margin-top:16px;display:flex;gap:8px;">
-                <button type="submit" class="btn btn-primary"><i class="bi bi-check"></i> {{ 'Update' if product else 'Simpan' }}</button>
-                <a href="{{ url_for('products_page') }}" class="btn btn-ghost">Batal</a>
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check"></i> {{ t('common.save') }}</button>
+                <a href="{{ url_for('products_page') }}" class="btn btn-ghost">{{ t('common.cancel') }}</a>
             </div>
         </form>
     </div>
@@ -121,16 +122,78 @@ function handleImage(input) {
         method: 'POST',
         body: formData
     }).then(function(r) { return r.json(); }).then(function(data) {
-        if (data.ai_description) {
-            document.getElementById('aiDesc').value = data.ai_description;
-            document.getElementById('uploadStatus').textContent = '✅ AI analyzed: ' + (data.color_name || '') + ' ' + (data.category_suggestion || '');
-        } else if (data.error) {
-            document.getElementById('aiDesc').value = 'Upload berhasil. Deskripsi: ' + file.name;
-            document.getElementById('uploadStatus').textContent = '✅ File uploaded';
+        if (data.error) {
+            document.getElementById('uploadStatus').textContent = '⚠️ Upload berhasil, AI tidak tersedia';
+            document.getElementById('aiDescBox').style.display = 'none';
+            return;
         }
+        
+        // Auto-fill AI Description box
+        var aiDescText = data.ai_description || '';
+        if (aiDescText) {
+            document.getElementById('aiDesc').value = aiDescText;
+        }
+        
+        // Auto-fill NAMA PRODUK if empty
+        var nameInput = document.querySelector('input[name="name"]');
+        if (nameInput && data.name && !nameInput.value.trim()) {
+            nameInput.value = data.name;
+        }
+        
+        // Auto-fill KATEGORI
+        var categorySelect = document.querySelector('select[name="category"]');
+        if (categorySelect && data.category) {
+            for (var i = 0; i < categorySelect.options.length; i++) {
+                if (categorySelect.options[i].value === data.category) {
+                    categorySelect.selectedIndex = i;
+                    break;
+                }
+            }
+        }
+        
+        // Auto-fill DESKRIPSI if empty
+        var descInput = document.querySelector('textarea[name="description"]');
+        if (descInput && data.description && !descInput.value.trim()) {
+            descInput.value = data.description;
+        }
+        
+        // Auto-fill HARGA if empty/zero
+        var priceInput = document.querySelector('input[name="price"]');
+        if (priceInput && data.price && (!priceInput.value || priceInput.value === '0')) {
+            priceInput.value = data.price;
+        }
+        
+        // Auto-fill STOK if zero
+        var stockInput = document.querySelector('input[name="stock"]');
+        if (stockInput && data.stock && (stockInput.value === '0' || !stockInput.value)) {
+            stockInput.value = data.stock;
+        }
+        
+        // Build status message: show what was filled
+        var filled = [];
+        if (data.name) filled.push('📦 ' + data.name);
+        if (data.category) filled.push('📂 ' + data.category);
+        if (data.price) filled.push('💰 Rp' + data.price.toLocaleString('id-ID'));
+        if (data.stock) filled.push('📊 Stok ' + data.stock);
+        
+        var model = data.ai_model || 'AI';
+        document.getElementById('uploadStatus').textContent = '✅ ' + model + ': ' + (filled.join(' • ') || 'Analisis selesai');
+        
+        // Flash green on auto-filled fields
+        ['input[name="name"]', 'select[name="category"]', 'textarea[name="description"]', 'input[name="price"]', 'input[name="stock"]'].forEach(function(sel) {
+            var el = document.querySelector(sel);
+            if (el && el.value && el.value !== '0') {
+                el.style.borderColor = 'var(--c-green)';
+                el.style.background = 'rgba(34,197,94,0.08)';
+                setTimeout(function() {
+                    el.style.borderColor = '';
+                    el.style.background = '';
+                }, 2500);
+            }
+        });
     }).catch(function() {
-        document.getElementById('aiDesc').value = 'Upload berhasil. Deskripsi manual diperlukan.';
-        document.getElementById('uploadStatus').textContent = '✅ File uploaded';
+        document.getElementById('uploadStatus').textContent = '⚠️ Upload berhasil, jaringan error';
+        document.getElementById('aiDescBox').style.display = 'none';
     });
 }
 </script>

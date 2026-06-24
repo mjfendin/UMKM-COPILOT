@@ -1,35 +1,36 @@
 {% extends "base.html" %}
-{% block title %}Percakapan{% endblock %}
-{% block page_title %}Percakapan{% endblock %}
+{% block title %}{{ t('conv.title') }}{% endblock %}
+{% block page_title %}{{ t('conv.title') }}{% endblock %}
 
 {% block content %}
+{% set intent_map = {'store_info': t('intent.store_info'), 'stock_inquiry': t('intent.stock_inquiry'), 'price_inquiry': t('intent.price_inquiry'), 'product_inquiry': t('intent.product_inquiry'), 'order': t('intent.order'), 'general': t('intent.general'), 'recommendation': t('intent.recommendation'), 'greeting': t('intent.greeting'), 'fallback': t('intent.fallback')} %}
 <div class="card">
-    <div class="card-head"><i class="bi bi-chat-left-text"></i> {{ conversations|length }} Percakapan</div>
+    <div class="card-head"><i class="bi bi-chat-left-text"></i> {{ conversations|length }} {{ t('conv.title') }}</div>
     {% if conversations %}
         {% for c in conversations %}
         <div class="list-item">
             <div class="list-av">{{ c.customer_name[0] if c.customer_name else '?' }}</div>
             <div class="list-body">
                 <div class="list-top">
-                    <span class="list-name">{{ c.customer_name or 'Customer' }} <span class="badge badge-gray">{{ c.intent }}</span></span>
+                    <span class="list-name">{{ c.customer_name or t('conv.customer_label') }} <span class="badge badge-gray">{{ intent_map.get(c.intent, c.intent) }}</span></span>
                     <span class="list-time">{{ c.created_at[:16] if c.created_at else '' }}</span>
                 </div>
                 <div style="margin-top:6px;">
                     <div style="background:var(--c-bg);border:1px solid var(--c-border);border-radius:6px;padding:6px 10px;margin-bottom:4px;font-size:.78rem;">
-                        <span style="color:var(--c-text-3);font-size:.65rem;">Customer:</span><br>{{ c.message_in }}
+                        <span style="color:var(--c-text-3);font-size:.65rem;">{{ t('conv.customer') }}</span><br>{{ c.message_in }}
                     </div>
                     <div style="background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.15);border-radius:6px;padding:6px 10px;font-size:.78rem;">
-                        <span style="color:var(--c-blue);font-size:.65rem;">AI Agent:</span><br>{{ c.message_out }}
+                        <span style="color:var(--c-blue);font-size:.65rem;">{{ t('conv.ai_agent') }}:</span><br>{{ c.message_out }}
                     </div>
                 </div>
                 <div style="margin-top:4px;font-size:.65rem;color:var(--c-text-3);">
-                    Respon: {{ c.response_time_ms }}ms
+                    {{ t('conv.response') }} {{ c.response_time_ms }}ms
                 </div>
             </div>
         </div>
         {% endfor %}
     {% else %}
-        <div class="empty"><i class="bi bi-chat-dots"></i>Belum ada percakapan</div>
+        <div class="empty"><i class="bi bi-chat-dots"></i>{{ t('conv.no_conversations') }}</div>
     {% endif %}
 </div>
 {% endblock %}

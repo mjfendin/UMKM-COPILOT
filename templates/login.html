@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login — UMKM Copilot</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --c-bg: #09090b; --c-bg-2: #18181b; --c-bg-3: #27272a;
+            --c-text: #fafafa; --c-text-2: #a1a1aa; --c-text-3: #71717a;
+            --c-border: #27272a; --c-blue: #3b82f6; --c-blue-dim: #1e3a5f;
+            --c-green: #22c55e; --c-red: #ef4444;
+            --r: 12px;
+        }
+        body {
+            font-family: 'Inter', sans-serif; background: var(--c-bg); color: var(--c-text);
+            min-height: 100vh; display: flex; align-items: center; justify-content: center;
+        }
+        .login-card {
+            background: var(--c-bg-2); border: 1px solid var(--c-border);
+            border-radius: var(--r); padding: 40px; width: 100%; max-width: 380px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,.5);
+        }
+        .login-logo { text-align: center; margin-bottom: 24px; }
+        .login-logo i { font-size: 2.5rem; color: var(--c-blue); }
+        .login-logo h1 { font-size: 1.3rem; font-weight: 700; margin-top: 8px; }
+        .login-logo p { font-size: .8rem; color: var(--c-text-3); margin-top: 4px; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: .75rem; font-weight: 600; color: var(--c-text-2); margin-bottom: 6px; }
+        .form-group input {
+            width: 100%; padding: 10px 14px; background: var(--c-bg-3); border: 1px solid var(--c-border);
+            border-radius: 8px; color: var(--c-text); font-size: .9rem; outline: none;
+            transition: border-color .2s;
+        }
+        .form-group input:focus { border-color: var(--c-blue); }
+        .btn-login {
+            width: 100%; padding: 12px; background: var(--c-blue); color: #fff; border: none;
+            border-radius: 8px; font-size: .9rem; font-weight: 600; cursor: pointer;
+            transition: background .2s;
+        }
+        .btn-login:hover { background: #2563eb; }
+        .flash-error {
+            background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.3);
+            color: var(--c-red); padding: 10px; border-radius: 8px; font-size: .8rem;
+            margin-bottom: 16px; text-align: center;
+        }
+        .back-link {
+            display: block; text-align: center; margin-top: 16px; font-size: .8rem;
+            color: var(--c-text-3); text-decoration: none;
+        }
+        .back-link:hover { color: var(--c-blue); }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <div class="login-logo">
+            <i class="bi bi-robot"></i>
+            <h1>UMKM Copilot</h1>
+            <p>Admin Dashboard Login</p>
+        </div>
+        
+        {% with msgs = get_flashed_messages(with_categories=true) %}
+            {% for cat, msg in msgs %}
+                <div class="flash-error">{{ msg }}</div>
+            {% endfor %}
+        {% endwith %}
+        
+        <form method="POST">
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" name="password" placeholder="Masukkan password admin" autofocus required>
+            </div>
+            <button type="submit" class="btn-login">
+                <i class="bi bi-box-arrow-in-right"></i> Login
+            </button>
+        </form>
+        
+        <a href="{{ url_for('demo_page') }}" class="back-link">
+            <i class="bi bi-play-circle"></i> Coba Demo Gratis →
+        </a>
+    </div>
+</body>
+</html>

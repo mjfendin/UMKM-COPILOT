@@ -8,10 +8,12 @@ import json
 import hashlib
 import hmac
 import base64
+import re
 from datetime import datetime, timedelta, timezone
 from flask import Flask, request, jsonify, render_template, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from functools import wraps
+from translations import t as _t
 
 # ============================================================
 # APP CONFIG
@@ -19,6 +21,54 @@ from functools import wraps
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'umkm-copilot-secret-key-change-in-production')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max upload
+
+@app.template_global()
+def t(key):
+    """Template global for translations"""
+    return _t(key, session.get('lang', 'id'))
+
+
+
+# ============================================================
+# AUTH SYSTEM — Admin Login
+# ============================================================
+ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'umkm2026')
+
+def login_required(f):
+    """Protect admin routes — redirect to /login if not authenticated"""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get('admin_logged_in'):
+            return redirect(url_for('login_page'))
+        return f(*args, **kwargs)
+    return decorated
+
+@app.route('/login', methods=['GET', 'POST'])
+def login_page():
+    """Admin login page"""
+    if request.method == 'POST':
+        password = request.form.get('password', '')
+        if password == ADMIN_PASSWORD:
+            session['admin_logged_in'] = True
+            session.permanent = True
+            return redirect(request.args.get('next', url_for('index')))
+        flash('Password salah!', 'error')
+    return render_template('login.html', lang=session.get('lang', 'id'))
+
+@app.route('/logout')
+def logout():
+    """Logout admin"""
+    session.pop('admin_logged_in', None)
+    return redirect(url_for('login_page'))
+
+@app.route('/lang/<lang_code>')
+def set_language(lang_code):
+    """Switch language (id/en) — redirects back to previous page"""
+    if lang_code in ('id', 'en'):
+        session['lang'] = lang_code
+    # Use 'next' param if provided, else referrer, else home
+    next_url = request.args.get('next', request.referrer or url_for('index'))
+    return redirect(next_url)
 
 # Database: use /tmp on Vercel (ephemeral but writable), local file otherwise
 _db_path = os.environ.get('DATABASE_URL', '')
@@ -175,37 +225,41 @@ class Analytics(db.Model):
 class UMKGeminiAgent:
     """AI Agent powered by Google Gemini for UMKM customer service"""
     
-    SYSTEM_PROMPT = """Anda adalah asisten AI untuk toko UMKM (Usaha Mikro, Kecil, dan Menengah) di Indonesia.
+    SYSTEM_PROMPT = """You are an AI assistant for a UMKM (small business) store in Indonesia.
 
-TUGAS ANDA:
-1. Menjawab pertanyaan customer tentang produk (harga, stok, deskripsi)
-2. Membantu customer memilih produk yang sesuai
-3. Memberikan informasi toko (jam buka, alamat, cara pesan)
-4. Membantu proses pemesanan sederhana
-5. Memberikan rekomendasi produk berdasarkan kebutuhan customer
+LANGUAGE RULES (CRITICAL):
+- ALWAYS respond in the SAME LANGUAGE as the customer's message.
+- If the customer writes in Bahasa Indonesia → respond in Bahasa Indonesia.
+- If the customer writes in English → respond in English.
+- NEVER mix languages in a single response.
+- The system language setting may be ID or EN — always match the CUSTOMER's message language.
 
-GAYA BICARA:
-- Ramah, profesional, tapi tidak kaku
-- Gunakan bahasa Indonesia yang mudah dipahami
-- Gunakan emoji secukupnya untuk membuat percakapan lebih hangat
-- Singkat dan langsung ke inti
+TASKS:
+1. Answer customer questions about products (price, stock, description)
+2. Help customers choose suitable products
+3. Provide store information (opening hours, address, how to order)
+4. Help with simple ordering process
+5. Provide product recommendations based on customer needs
 
-INFORMASI TOKO:
-- Toko akan memberikan data produk dan informasi toko
-- Gunakan data tersebut untuk menjawab pertanyaan
-- Jika tidak tahu jawabannya, katakan dengan jujur
+TONE:
+- Friendly, professional, not stiff
+- Use emojis to make conversation warmer
+- Keep responses short and to the point (max 3-4 lines for WhatsApp)
 
-CONTOH RESPONS:
+STORE INFORMATION:
+- Store will provide product data and store info
+- Use that data to answer questions
+- If you don't know the answer, say so honestly
+
+EXAMPLE RESPONSES (Indonesian):
 - "Halo Kak! 😊 Ada yang bisa kami bantu?"
 - "Untuk [produk], harganya Rp [harga]. Stok masih ada [jumlah] unit ya!"
-- "Produk yang cocok untuk Kak [nama] adalah [rekomendasi]. Mau dilihat detailnya?"
-- "Untuk pemesanan, Kakak bisa langsung chat kami dengan format: PESAN [nama produk]"
+- "Produk yang cocok adalah [rekomendasi]. Mau dilihat detailnya?"
 
-BENTUK RESPONS:
-- Selalu dalam format teks biasa (bukan HTML atau Markdown)
-- Gunakan bullet point jika perlu
-- Sertakan harga dalam format Rupiah: Rp X.XXX.XXX
-- Maksimal 3-4 baris per respons untuk WhatsApp
+EXAMPLE RESPONSES (English):
+- "Hello! 😊 How can we help you today?"
+- "For [product], the price is Rp [price]. We have [qty] units in stock!"
+- "I recommend [product]. Would you like to see the details?"
 """
     
     def __init__(self, api_key=None):
@@ -266,81 +320,143 @@ PRODUK TERSEDIA:
 TOTAL PRODUK: {len(products)}
 """
     
+    def _is_english(self, message):
+        """Detect if message is primarily English — uses word boundaries"""
+        msg_lower = message.lower()
+        words = re.findall(r'[a-z]+', msg_lower)
+        id_words = {'halo', 'hai', 'pagi', 'siang', 'sore', 'malam', 'berapa', 'harga', 'stok',
+                    'produk', 'pesan', 'beli', 'toko', 'buka', 'tutup', 'alamat', 'lokasi',
+                    'rekomendasi', 'saran', 'murah', 'bagus', 'yang', 'ini', 'itu', 'ada', 'apa',
+                    'siapa', 'dimana', 'kapan', 'kenapa', 'bagaimana', 'mau', 'dong',
+                    'ya', 'nih', 'kah', 'kak', 'mbak', 'mas', 'pak', 'tolong', 'terima',
+                    'kasih', 'makasih', 'permisi', 'maaf', 'sedang', 'lagi', 'saya', 'kami',
+                    'belum', 'masih', 'sudah', 'akan', 'bisa', 'tidak', 'bukan',
+                    'juga', 'hanya', 'untuk', 'dengan', 'dari', 'ke', 'dan', 'atau',
+                    'saja', 'aja', 'lho', 'kok', 'deh'}
+        id_count = sum(1 for w in words if w in id_words)
+        if id_count > 0:
+            return False
+        eng_words = {'hello', 'hey', 'price', 'stock', 'products', 'product', 'recommend', 'cheap', 'good',
+                     'how', 'what', 'where', 'when', 'have', 'available', 'order', 'buy', 'cost',
+                     'show', 'tell', 'store', 'shop', 'open', 'close', 'recommendation',
+                     'anyone', 'something', 'else', 'about', 'help', 'thanks', 'please',
+                     'check', 'want', 'need', 'look', 'see', 'list', 'all', 'each'}
+        eng_count = sum(1 for w in words if w in eng_words)
+        return eng_count >= 1
+
+
     def _fallback_response(self, message, shop, products):
-        """Smart fallback when Gemini API is unavailable"""
+        """Smart fallback when Gemini API is unavailable — bilingual"""
         import random
         msg_lower = message.lower()
-        
+        is_en = self._is_english(message)
+
         # Store info
-        if any(k in msg_lower for k in ['alamat', 'lokasi', 'kontak', 'jam buka', 'buka jam', 'toko buka', 'tutup', 'jam berapa']):
-            return f"📍 {shop['name']}\n🏠 {shop.get('address', '')}\n🕐 Jam: {shop.get('open_hours', '09:00')} - {shop.get('close_hours', '21:00')}\n📞 {shop.get('phone', '')}\n📱 WA: {shop.get('whatsapp_number', '')}"
-        
+        store_info_id = f"📍 {shop['name']}\n🏠 {shop.get('address', '')}\n🕐 Jam: {shop.get('open_hours', '09:00')} - {shop.get('close_hours', '21:00')}\n📞 {shop.get('phone', '')}\n📱 WA: {shop.get('whatsapp_number', '')}"
+        store_info_en = f"📍 {shop['name']}\n🏠 {shop.get('address', '')}\n🕐 Hours: {shop.get('open_hours', '09:00')} - {shop.get('close_hours', '21:00')}\n📞 {shop.get('phone', '')}\n📱 WA: {shop.get('whatsapp_number', '')}"
+        if any(k in msg_lower for k in ['alamat', 'lokasi', 'kontak', 'jam buka', 'buka jam', 'toko buka', 'tutup', 'jam berapa', 'address', 'location', 'hours', 'open', 'close', 'where']):
+            return store_info_en if is_en else store_info_id
+
         # Order
-        if any(k in msg_lower for k in ['pesan', 'order', 'beli', 'checkout']):
+        if any(k in msg_lower for k in ['pesan', 'order', 'beli', 'checkout', 'buy']):
             for p in products:
                 if any(word in msg_lower for word in p['name'].lower().split()):
                     if p['stock'] > 0:
-                        return f"✅ Pesanan {p['name']} sudah kami catat!\n💰 Harga: Rp {p['price']:,.0f}\n📦 Stok: {p['stock']} unit\n\nUntuk konfirmasi, chat langsung:\n📱 WA: {shop.get('whatsapp_number', '')}\n\nTerima kasih Kak! 😊"
+                        if is_en:
+                            return f"✅ Order for {p['name']} recorded!\n💰 Price: Rp {p['price']:,.0f}\n📦 Stock: {p['stock']} units\n\nFor confirmation, chat directly:\n📱 WA: {shop.get('whatsapp_number', '')}\n\nThank you! 😊"
+                        else:
+                            return f"✅ Pesanan {p['name']} sudah kami catat!\n💰 Harga: Rp {p['price']:,.0f}\n📦 Stok: {p['stock']} unit\n\nUntuk konfirmasi, chat langsung:\n📱 WA: {shop.get('whatsapp_number', '')}\n\nTerima kasih Kak! 😊"
                     else:
-                        return f"Maaf Kak, {p['name']} lagi kosong 😔\nKami bisa kabarin kalau sudah restok ya?"
-            return "Produk apa yang mau dipesan Kak? 😊\nContoh: PESAN [nama produk]"
-        
+                        if is_en:
+                            return f"Sorry, {p['name']} is out of stock 😔\nWe'll let you know when it's restocked!"
+                        else:
+                            return f"Maaf Kak, {p['name']} lagi kosong 😔\nKami bisa kabarin kalau sudah restok ya?"
+            return "What product would you like to order? 😊\nExample: ORDER [product name]" if is_en else "Produk apa yang mau dipesan Kak? 😊\nContoh: PESAN [nama produk]"
+
         # Product list
-        if any(k in msg_lower for k in ['produk', 'apa saja', 'daftar', 'catalog', 'katalog', 'list']):
-            plist = "\n".join([f"• {p['name']} - Rp {p['price']:,.0f} (Stok: {p['stock']})" for p in products[:6]])
-            return f"Produk {shop['name']} Kak:\n{plist}\n\nMau tanya yang mana? 😊"
-        
-        # Greeting
-        if any(k in msg_lower for k in ['halo', 'hai', 'hello', 'hi', 'pagi', 'siang', 'sore', 'malam']):
-            if any(k in msg_lower for k in ['produk', 'apa', 'ada']):
-                plist = "\n".join([f"• {p['name']} - Rp {p['price']:,.0f} (Stok: {p['stock']})" for p in products[:6]])
+        if any(k in msg_lower for k in ['produk', 'apa saja', 'daftar', 'catalog', 'katalog', 'list', 'products', 'all']):
+            plist = "\n".join([f"• {p['name']} - Rp {p['price']:,.0f} (Stock: {p['stock']})" if is_en else f"• {p['name']} - Rp {p['price']:,.0f} (Stok: {p['stock']})" for p in products[:6]])
+            if is_en:
+                return f"Products at {shop['name']}:\n{plist}\n\nWhich one interests you? 😊"
+            else:
                 return f"Produk {shop['name']} Kak:\n{plist}\n\nMau tanya yang mana? 😊"
-            return f"Halo Kak! 👋 Selamat datang di {shop['name']}. Ada yang bisa kami bantu hari ini? 😊"
-        
+
+        # Greeting — use word-boundary matching (avoid 'hi' matching 'shirt')
+        greeting_words = {'halo', 'hai', 'hello', 'hi', 'hey', 'pagi', 'siang', 'sore', 'malam'}
+        msg_words = set(re.findall(r'[a-z]+', msg_lower))
+        has_greeting = bool(greeting_words & msg_words) or any(phrase in msg_lower for phrase in ['good morning', 'good afternoon', 'good evening'])
+        if has_greeting:
+            if msg_words & {'produk', 'apa', 'ada', 'product', 'show', 'what'}:
+                plist = "\n".join([f"• {p['name']} - Rp {p['price']:,.0f} (Stock: {p['stock']})" if is_en else f"• {p['name']} - Rp {p['price']:,.0f} (Stok: {p['stock']})" for p in products[:6]])
+                if is_en:
+                    return f"Products at {shop['name']}:\n{plist}\n\nWhich one interests you? 😊"
+                else:
+                    return f"Produk {shop['name']} Kak:\n{plist}\n\nMau tanya yang mana? 😊"
+            if is_en:
+                return f"Hello! 👋 Welcome to {shop['name']}. How can we help you today? 😊"
+            else:
+                return f"Halo Kak! 👋 Selamat datang di {shop['name']}. Ada yang bisa kami bantu hari ini? 😊"
+
         # Recommendation
-        if any(k in msg_lower for k in ['rekomendasi', 'saran', 'recommend', 'cocok', 'murah', 'bagus']):
+        if any(k in msg_lower for k in ['rekomendasi', 'saran', 'recommend', 'cocok', 'murah', 'bagus', 'suggest', 'best', 'cheap', 'good']):
             category_map = {
-                'aksesoris': ['Aksesoris', 'Jam', 'Topi', 'Tas'],
-                'pakaian': ['Pakaian', 'Pria', 'Wanita', 'Kemeja', 'Dress', 'Hoodie'],
-                'sepatu': ['Sepatu', 'Sneakers', 'Footwear'],
-                'celana': ['Celana', 'Jeans'],
+                'aksesoris': ['Aksesoris', 'Jam', 'Topi', 'Tas', 'accessories', 'watch', 'hat', 'bag'],
+                'pakaian': ['Pakaian', 'Pria', 'Wanita', 'Kemeja', 'Dress', 'Hoodie', 'clothing', 'shirt'],
+                'sepatu': ['Sepatu', 'Sneakers', 'Footwear', 'shoes'],
+                'celana': ['Celana', 'Jeans', 'pants'],
             }
             filtered = products
             for cat_key, cat_vals in category_map.items():
                 if cat_key in msg_lower:
                     filtered = [p for p in products if any(cv.lower() in p.get('category', '').lower() for cv in cat_vals)]
                     break
-            
-            if any(k in msg_lower for k in ['murah', 'terjangkau', 'hemat']):
+
+            if any(k in msg_lower for k in ['murah', 'terjangkau', 'hemat', 'cheap', 'budget', 'affordable']):
                 filtered.sort(key=lambda p: p['price'])
-            
+
             if filtered:
                 p = filtered[0]
-                return f"Rekomendasi: {p['name']} Rp {p['price']:,.0f} 🔥\n{p.get('description', '')}\nStok: {p['stock']} unit\nMau lihat detail? 😊"
-            return "Tanya produk spesifik ya Kak, nanti kami bantu carikan yang cocok! 😊"
-        
+                if is_en:
+                    return f"Recommendation: {p['name']} Rp {p['price']:,.0f} 🔥\n{p.get('description', '')}\nStock: {p['stock']} units\nWant to see details? 😊"
+                else:
+                    return f"Rekomendasi: {p['name']} Rp {p['price']:,.0f} 🔥\n{p.get('description', '')}\nStok: {p['stock']} unit\nMau lihat detail? 😊"
+            return "Ask about a specific product, and we'll help you find the right one! 😊" if is_en else "Tanya produk spesifik ya Kak, nanti kami bantu carikan yang cocok! 😊"
+
         # Price inquiry
         for p in products:
             if any(word in msg_lower for word in p['name'].lower().split()):
-                if any(k in msg_lower for k in ['harga', 'berapa', 'price', 'murah', 'mahal']):
-                    return f"Untuk {p['name']}, harganya Rp {p['price']:,.0f} ya Kak. Stok masih ada {p['stock']} unit! 😊"
-                if any(k in msg_lower for k in ['stok', 'stock', 'ada', 'habis']):
-                    if p['stock'] > 0:
-                        return f"{p['name']} masih ada {p['stock']} unit Kak. Harga Rp {p['price']:,.0f}. Mau diorder? 😉"
+                if any(k in msg_lower for k in ['harga', 'berapa', 'price', 'murah', 'mahal', 'cost']):
+                    if is_en:
+                        return f"For {p['name']}, the price is Rp {p['price']:,.0f}. We have {p['stock']} units in stock! 😊"
                     else:
-                        return f"Maaf Kak, {p['name']} lagi kosong 😔 Kami bisa kabarin kalau sudah restok ya?"
-                return f"{p['name']} - Rp {p['price']:,.0f} (Stok: {p['stock']}). Mau yang mana Kak? 😊"
-        
-        if any(k in msg_lower for k in ['harga', 'berapa', 'price']):
+                        return f"Untuk {p['name']}, harganya Rp {p['price']:,.0f} ya Kak. Stok masih ada {p['stock']} unit! 😊"
+                stock_kw = {'stok', 'stock', 'habis', 'available', 'tersedia'}
+                if stock_kw & msg_words or 'ada' in msg_words:
+                    if p['stock'] > 0:
+                        if is_en:
+                            return f"{p['name']} has {p['stock']} units available. Price: Rp {p['price']:,.0f}. Want to order? 😉"
+                        else:
+                            return f"{p['name']} masih ada {p['stock']} unit Kak. Harga Rp {p['price']:,.0f}. Mau diorder? 😉"
+                    else:
+                        if is_en:
+                            return f"Sorry, {p['name']} is out of stock 😔 We'll let you know when restocked!"
+                        else:
+                            return f"Maaf Kak, {p['name']} lagi kosong 😔 Kami bisa kabarin kalau sudah restok ya?"
+                if is_en:
+                    return f"{p['name']} - Rp {p['price']:,.0f} (Stock: {p['stock']}). Which one would you like? 😊"
+                else:
+                    return f"{p['name']} - Rp {p['price']:,.0f} (Stok: {p['stock']}). Mau yang mana Kak? 😊"
+
+        if any(k in msg_lower for k in ['harga', 'berapa', 'price', 'cost']):
             p = random.choice(products) if products else None
             if p:
-                return f"Contoh: {p['name']} Rp {p['price']:,.0f}. Tanya produk spesifik ya Kak! 😊"
-            return "Bisa tanya harga produk tertentu ya Kak. Contoh: 'Berapa harga [nama produk]?' 😊"
+                return f"Example: {p['name']} Rp {p['price']:,.0f}. Ask about a specific product! 😊" if is_en else f"Contoh: {p['name']} Rp {p['price']:,.0f}. Tanya produk spesifik ya Kak! 😊"
+            return "Ask about a specific product price. Example: 'How much is [product name]?' 😊" if is_en else "Bisa tanya harga produk tertentu ya Kak. Contoh: 'Berapa harga [nama produk]?' 😊"
+
+        if stock_kw & msg_words or 'ada' in msg_words:
+            return "Which product would you like to check stock for? 😊" if is_en else "Produk apa yang ingin dicek stoknya Kak? 😊"
         
-        if any(k in msg_lower for k in ['stok', 'stock', 'ada', 'habis', 'kosong']):
-            return "Produk apa yang ingin dicek stoknya Kak? 😊"
-        
-        return f"Makasih Kak! 😊 Ada yang bisa kami bantu soal produk atau info {shop['name']}?"
+        return ("Thank you! 😊 Anything else we can help with about products or store info?" if is_en else f"Makasih Kak! 😊 Ada yang bisa kami bantu soal produk atau info {shop['name']}?")
     
     def _call_gemini(self, user_message, context, history=None):
         """Call Gemini API with rate limiter and fallback"""
@@ -352,7 +468,35 @@ TOTAL PRODUK: {len(products)}
             genai.configure(api_key=self.api_key)
             model = genai.GenerativeModel(self.model)
             
-            full_prompt = f"{self.SYSTEM_PROMPT}\n\n{context}\n\nPESAN CUSTOMER: {user_message}"
+            # Detect if customer message is English (use word boundaries)
+            msg_lower = user_message.lower()
+            words = re.findall(r'[a-z]+', msg_lower)
+            _id_set = {'halo', 'hai', 'pagi', 'siang', 'sore', 'malam', 'berapa', 'harga', 'stok',
+                        'produk', 'pesan', 'beli', 'toko', 'buka', 'tutup', 'alamat', 'lokasi',
+                        'rekomendasi', 'saran', 'murah', 'bagus', 'yang', 'ini', 'itu', 'ada', 'apa',
+                        'siapa', 'dimana', 'kapan', 'kenapa', 'bagaimana', 'mau', 'dong', 'ya', 'nih',
+                        'kah', 'kak', 'mbak', 'mas', 'pak', 'tolong', 'terima', 'kasih', 'makasih',
+                        'permisi', 'maaf', 'sedang', 'lagi', 'saya', 'kami', 'belum', 'masih', 'sudah'}
+            _en_set = {'hello', 'hey', 'price', 'stock', 'product', 'recommend', 'how', 'what', 'where',
+                       'have', 'available', 'order', 'buy', 'store', 'shop', 'open', 'close', 'want',
+                       'do', 'you', 'show', 'please', 'need', 'about', 'help', 'check', 'good'}
+            id_count = sum(1 for w in words if w in _id_set)
+            en_count = sum(1 for w in words if w in _en_set)
+            is_en_msg = id_count == 0 and en_count >= 1
+            
+            if is_en_msg:
+                lang_instruction = (
+                    "\\n\\n=== LANGUAGE RULE ==="
+                    "\\nThe customer message is in ENGLISH. You MUST respond ENTIRELY in ENGLISH."
+                    "\\nDo NOT use Indonesian words like 'Kak', 'ya', 'nih', 'dong'."
+                    "\\nUse English equivalents: 'Hello', 'Sure', 'Here you go', 'Thank you'."
+                    "\\nProduct names (e.g. Kemeja Batik Pria) can stay as-is since they are proper names."
+                    "\\nALL other text MUST be in English."
+                )
+            else:
+                lang_instruction = "\\n\\nIMPORTANT: The customer message is in Bahasa Indonesia. Respond in Bahasa Indonesia. Use polite forms like 'Kak', 'ya', 'nih'."
+
+            full_prompt = f"{self.SYSTEM_PROMPT}{lang_instruction}\n\n{context}\n\nCUSTOMER MESSAGE: {user_message}"
             
             if history:
                 chat = model.start_chat(history=history)
@@ -487,6 +631,49 @@ def db_get_conversations(limit=50):
     return [c.to_dict() for c in convs]
 
 
+
+@app.route('/debug/whatsapp')
+def debug_whatsapp():
+    """Debug: Check WhatsApp config (admin only)"""
+    if not session.get('admin_logged_in'):
+        return jsonify({'error': 'unauthorized'}), 401
+    return jsonify({
+        'token_set': bool(os.environ.get('WHATSAPP_TOKEN')),
+        'token_length': len(os.environ.get('WHATSAPP_TOKEN', '')),
+        'phone_id': os.environ.get('WHATSAPP_PHONE_NUMBER_ID', ''),
+        'verify_token': os.environ.get('WHATSAPP_VERIFY_TOKEN', ''),
+        'business_account_id': os.environ.get('WHATSAPP_BUSINESS_ACCOUNT_ID', ''),
+    })
+
+
+@app.route('/debug/test-send')
+def test_send_message():
+    """Test: send WhatsApp message using stored token"""
+    if not session.get('admin_logged_in'):
+        return jsonify({'error': 'unauthorized'}), 401
+    
+    import requests
+    token = os.environ.get('WHATSAPP_TOKEN', '')
+    phone_id = os.environ.get('WHATSAPP_PHONE_NUMBER_ID', '')
+    
+    if not token or not phone_id:
+        return jsonify({'error': 'missing config', 'token_set': bool(token), 'phone_id': phone_id})
+    
+    url = f"https://graph.facebook.com/v18.0/{phone_id}/messages"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+    data = {
+        "messaging_product": "whatsapp",
+        "to": "6281283839494",
+        "type": "text",
+        "text": {"body": "✅ Test dari UMKM Copilot! Token berfungsi."}
+    }
+    
+    resp = requests.post(url, headers=headers, json=data)
+    return jsonify(resp.json())
+
 # ============================================================
 # WHATSAPP WEBHOOK HANDLER
 # ============================================================
@@ -579,6 +766,7 @@ def _send_whatsapp_message(phone, message):
 # DASHBOARD ROUTES
 # ============================================================
 @app.route('/')
+@login_required
 def index():
     """Main dashboard"""
     try:
@@ -596,7 +784,7 @@ def index():
         week_conversations = sum(1 for c in convs if str(c.get('created_at', '')) >= week_ago.isoformat())
         today_conversations = sum(1 for c in convs if str(c.get('created_at', '')).startswith(today.isoformat()))
         
-        return render_template('dashboard.html', 
+        return render_template('dashboard.html',
             shop=shop_data, 
             total_products=total_products,
             low_stock=low_stock,
@@ -606,7 +794,8 @@ def index():
             week_orders=0,
             ai_status='Aktif' if shop_data.get('ai_enabled') else 'Nonaktif',
             db_status='Firestore' if HAS_FIRESTORE else 'SQLite',
-            vision_status='Active' if HAS_VISION else 'Local Fallback'
+            vision_status='Active' if HAS_VISION else 'Local Fallback',
+            lang=session.get('lang', 'id')
         )
     except Exception as e:
         print(f"Dashboard error: {e}")
@@ -619,14 +808,16 @@ def index():
 # PRODUCTS ROUTES
 # ============================================================
 @app.route('/products')
+@login_required
 def products_page():
     """Products management"""
     shop = get_or_create_shop()
     products = Product.query.filter_by(shop_id=shop.id).order_by(Product.created_at.desc()).all()
-    return render_template('products.html', shop=shop, products=products)
+    return render_template('products.html', shop=shop, products=products, lang=session.get('lang', 'id'))
 
 
 @app.route('/products/create', methods=['GET', 'POST'])
+@login_required
 def product_create():
     """Create new product"""
     shop = get_or_create_shop()
@@ -680,10 +871,11 @@ def product_create():
         
         return redirect(url_for('products_page'))
     
-    return render_template('product_form.html', shop=shop, product=None)
+    return render_template('product_form.html', shop=shop, product=None, lang=session.get('lang', 'id'))
 
 
 @app.route('/products/<int:product_id>/edit', methods=['GET', 'POST'])
+@login_required
 def product_edit(product_id):
     """Edit product"""
     shop = get_or_create_shop()
@@ -722,10 +914,11 @@ def product_edit(product_id):
         
         return redirect(url_for('products_page'))
     
-    return render_template('product_form.html', shop=shop, product=product)
+    return render_template('product_form.html', shop=shop, product=product, lang=session.get('lang', 'id'))
 
 
 @app.route('/products/<int:product_id>/delete', methods=['POST'])
+@login_required
 def product_delete(product_id):
     """Delete product"""
     try:
@@ -770,37 +963,70 @@ def api_analyze_image():
 # CONVERSATIONS ROUTE
 # ============================================================
 @app.route('/conversations')
+@login_required
 def conversations_page():
     """View conversations"""
     shop = get_or_create_shop()
     convs = db_get_conversations(50)
-    return render_template('conversations.html', shop=shop, conversations=convs)
+    return render_template('conversations.html', shop=shop, conversations=convs, lang=session.get('lang', 'id'))
 
 
 # ============================================================
 # ANALYTICS ROUTE
 # ============================================================
 @app.route('/analytics')
+@login_required
 def analytics_page():
-    """View analytics"""
+    """View analytics — computes daily_data and intent_counts from real conversations"""
     shop = get_or_create_shop()
-    convs = db_get_conversations(100)
+    convs = db_get_conversations(200)
     
-    from datetime import date as date_type
+    from datetime import date as date_type, timedelta
     today = date_type.today()
     
-    # Calculate stats from conversations
-    total_convs = len(convs)
+    # --- Daily data (last 7 days) ---
+    daily_map = {}
+    for i in range(6, -1, -1):
+        d = today - timedelta(days=i)
+        daily_map[d.strftime('%d %b')] = {'date': d.strftime('%d %b'), 'conversations': 0, 'inquiries': 0, 'orders': 0}
+    
+    for c in convs:
+        try:
+            ts = c.get('created_at', '') or c.get('timestamp', '')
+            if ts:
+                conv_date = str(ts)[:10]  # YYYY-MM-DD
+                from datetime import datetime as dt
+                d_obj = dt.strptime(conv_date, '%Y-%m-%d').date()
+                key = d_obj.strftime('%d %b')
+                if key in daily_map:
+                    daily_map[key]['conversations'] += 1
+                    intent = c.get('intent', 'general')
+                    if intent in ('price_inquiry', 'stock_inquiry', 'product_inquiry'):
+                        daily_map[key]['inquiries'] += 1
+                    if intent == 'order' or 'pesan' in c.get('message', '').lower() or 'order' in c.get('message', '').lower():
+                        daily_map[key]['orders'] += 1
+        except Exception:
+            pass
+    
+    daily_data = list(daily_map.values())
+    
+    # --- Intent counts ---
     intents = {}
     for c in convs:
         intent = c.get('intent', 'general')
         intents[intent] = intents.get(intent, 0) + 1
+    intent_counts = sorted(intents.items(), key=lambda x: -x[1])
     
-    return render_template('analytics.html', 
+    # --- AI performance (avg response time) ---
+    times = [c.get('response_time_ms', 0) for c in convs if c.get('response_time_ms', 0) > 0]
+    avg_time = round(sum(times) / len(times) / 1000, 1) if times else 0
+    
+    return render_template('analytics.html',
         shop=shop, 
-        conversations=convs,
-        total_conversations=total_convs,
-        intents=intents
+        daily_data=daily_data,
+        intent_counts=intent_counts,
+        avg_response_time=avg_time,
+        lang=session.get('lang', 'id')
     )
 
 
@@ -808,6 +1034,7 @@ def analytics_page():
 # SETTINGS ROUTE
 # ============================================================
 @app.route('/settings', methods=['GET', 'POST'])
+@login_required
 def settings_page():
     """Shop settings"""
     shop = get_or_create_shop()
@@ -831,7 +1058,7 @@ def settings_page():
         
         return redirect(url_for('settings_page'))
     
-    return render_template('settings.html', shop=shop)
+    return render_template('settings.html', shop=shop, lang=session.get('lang', 'id'))
 
 
 # ============================================================
@@ -840,19 +1067,39 @@ def settings_page():
 @app.route('/demo')
 def demo_page():
     """Demo chat page"""
-    return render_template('demo.html')
+    # Support both session and URL parameter for language
+    lang = request.args.get('lang', session.get('lang', 'id'))
+    if lang in ('id', 'en'):
+        session['lang'] = lang
+    return render_template('demo.html', lang=lang)
 
 
 @app.route('/demo/test', methods=['POST'])
 def demo_test():
-    """Test the AI agent from demo page"""
+    """Test the AI agent from demo page — saves conversation for analytics"""
     data = request.get_json()
     message = data.get('message', 'Halo')
+    lang = data.get('lang', session.get('lang', 'id'))
     
     shop_data = db_get_shop_dict()
     products_data = db_get_products_list()
     
     result = ai_agent.handle_message(message, shop_data, products_data)
+    
+    # Save conversation for analytics
+    try:
+        shop = get_or_create_shop()
+        db_save_conversation(shop.id, {
+            'customer_phone': 'demo',
+            'customer_name': 'Demo User',
+            'message_in': message,
+            'message_out': result.get('response', ''),
+            'intent': result.get('intent', 'general'),
+            'response_time_ms': result.get('response_time_ms', 0)
+        })
+    except Exception:
+        pass  # Don't fail the request if save fails
+    
     return jsonify(result)
 
 

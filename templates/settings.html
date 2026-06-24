@@ -1,49 +1,50 @@
 {% extends "base.html" %}
-{% block title %}Pengaturan{% endblock %}
-{% block page_title %}Pengaturan{% endblock %}
+{% block title %}{{ t('settings.title') }}{% endblock %}
+{% block page_title %}{{ t('settings.title') }}{% endblock %}
 
 {% block content %}
 <div style="max-width:600px;">
 <div class="card">
-    <div class="card-head"><i class="bi bi-shop"></i> Informasi Toko</div>
+    <div class="card-head"><i class="bi bi-shop"></i> {{ t('settings.shop_info') }}</div>
     <div class="card-body">
         <form method="POST">
             <div style="display:grid;gap:12px;">
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                     <div>
-                        <label class="lbl">Nama Toko *</label>
+                        <label class="lbl">{{ t('settings.shop_name') }}</label>
                         <input class="input" name="name" value="{{ shop.name }}" required>
                     </div>
                     <div>
-                        <label class="lbl">Pemilik</label>
+                        <label class="lbl">{{ t('settings.owner') }}</label>
                         <input class="input" name="owner_name" value="{{ shop.owner_name }}">
                     </div>
                 </div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                     <div>
-                        <label class="lbl">Telepon</label>
+                        <label class="lbl">{{ t('settings.phone') }}</label>
                         <input class="input" name="phone" value="{{ shop.phone }}" placeholder="08xxxxxxxxxx">
                     </div>
                     <div>
-                        <label class="lbl">Kategori</label>
+                        <label class="lbl">{{ t('settings.shop_category') }}</label>
                         <select class="input" name="category">
-                            {% for c in ['Retail','Retail Fashion','F&B','Jasa','Elektronik','Kecantikan','Lainnya'] %}
-                            <option value="{{ c }}" {% if shop.category==c %}selected{% endif %}>{{ c }}</option>
+                            {% set cats = [('Retail','settings.shop_category.retail'),('Retail Fashion','settings.shop_category.retail_fashion'),('F&B','settings.shop_category.fb'),('Jasa','settings.shop_category.jasa'),('Elektronik','settings.shop_category.elektronik'),('Kecantikan','settings.shop_category.kecantikan'),('Lainnya','settings.shop_category.lainnya')] %}
+                            {% for val, key in cats %}
+                            <option value="{{ val }}" {% if shop.category==val %}selected{% endif %}>{{ t(key) }}</option>
                             {% endfor %}
                         </select>
                     </div>
                 </div>
                 <div>
-                    <label class="lbl">Alamat</label>
+                    <label class="lbl">{{ t('settings.address') }}</label>
                     <textarea class="input" name="address" rows="2">{{ shop.address }}</textarea>
                 </div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                     <div>
-                        <label class="lbl">Jam Buka</label>
+                        <label class="lbl">{{ t('settings.open_hours') }}</label>
                         <input class="input" type="time" name="open_hours" value="{{ shop.open_hours or '09:00' }}">
                     </div>
                     <div>
-                        <label class="lbl">Jam Tutup</label>
+                        <label class="lbl">{{ t('settings.close_hours') }}</label>
                         <input class="input" type="time" name="close_hours" value="{{ shop.close_hours or '21:00' }}">
                     </div>
                 </div>
@@ -52,25 +53,25 @@
             <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--c-border);">
                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
                     <i class="bi bi-whatsapp" style="color:#25D366;font-size:1.1rem;"></i>
-                    <span style="font-weight:600;font-size:.88rem;">WhatsApp</span>
+                    <span style="font-weight:600;font-size:.88rem;">{{ t('settings.whatsapp') }}</span>
                 </div>
                 <div style="display:grid;grid-template-columns:1fr auto;gap:12px;align-items:end;">
                     <div>
-                        <label class="lbl">Nomor WhatsApp Business</label>
+                        <label class="lbl">{{ t('settings.whatsapp_number') }}</label>
                         <input class="input" name="whatsapp_number" value="{{ shop.whatsapp_number }}" placeholder="628xxxxxxxxxx">
                     </div>
                     <div>
-                        <label class="lbl">AI Status</label>
+                        <label class="lbl">{{ t('settings.ai_status') }}</label>
                         <div style="display:flex;align-items:center;gap:8px;height:36px;">
                             <input type="checkbox" name="ai_enabled" id="aiEnabled" {% if shop.ai_enabled %}checked{% endif %} style="width:36px;height:20px;">
-                            <span id="aiLabel" style="font-size:.78rem;color:var(--c-text-2);">{{ 'Aktif' if shop.ai_enabled else 'Nonaktif' }}</span>
+                            <span id="aiLabel" style="font-size:.78rem;color:var(--c-text-2);">{{ t('settings.active') if shop.ai_enabled else t('settings.inactive') }}</span>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div style="margin-top:16px;">
-                <button type="submit" class="btn btn-primary"><i class="bi bi-check"></i> Simpan</button>
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check"></i> {{ t('common.save') }}</button>
             </div>
         </form>
     </div>
@@ -79,7 +80,7 @@
 <div class="card">
     <div class="card-head"><i class="bi bi-link-45deg"></i> Webhook</div>
     <div class="card-body">
-        <label class="lbl">Webhook URL</label>
+        <label class="lbl">{{ t('settings.webhook_url') }}</label>
         <div style="display:flex;gap:8px;">
             <input class="input" value="{{ request.host_url }}webhook" readonly id="whUrl">
             <button class="btn btn-ghost btn-sm" onclick="navigator.clipboard.writeText(document.getElementById('whUrl').value);this.textContent='✓ Copied'"><i class="bi bi-clipboard"></i></button>
@@ -93,7 +94,7 @@
 
 <script>
 document.getElementById('aiEnabled').addEventListener('change', function() {
-    document.getElementById('aiLabel').textContent = this.checked ? 'Aktif' : 'Nonaktif';
+    document.getElementById('aiLabel').textContent = this.checked ? '{{ t('settings.active') }}' : '{{ t('settings.inactive') }}';
 });
 </script>
 {% endblock %}

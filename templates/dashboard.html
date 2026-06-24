@@ -1,25 +1,25 @@
 {% extends "base.html" %}
-{% block title %}Dashboard{% endblock %}
-{% block page_title %}Dashboard{% endblock %}
+{% block title %}{{ t('dash.title') }}{% endblock %}
+{% block page_title %}{{ t('dash.title') }}{% endblock %}
 
 {% block content %}
 <!-- Stats -->
 <div class="stats">
     <div class="stat">
         <div class="stat-ico blue"><i class="bi bi-robot"></i></div>
-        <div><div class="stat-val">{{ today_conversations }}</div><div class="stat-lbl">Chat Hari Ini</div></div>
+        <div><div class="stat-val">{{ today_conversations }}</div><div class="stat-lbl">{{ t('dash.stats.today') }}</div></div>
     </div>
     <div class="stat">
         <div class="stat-ico green"><i class="bi bi-chat-left-text"></i></div>
-        <div><div class="stat-val">{{ week_conversations }}</div><div class="stat-lbl">Minggu Ini</div></div>
+        <div><div class="stat-val">{{ week_conversations }}</div><div class="stat-lbl">{{ t('dash.stats.this_week') }}</div></div>
     </div>
     <div class="stat">
         <div class="stat-ico purple"><i class="bi bi-box-seam"></i></div>
-        <div><div class="stat-val">{{ total_products }}</div><div class="stat-lbl">Produk</div></div>
+        <div><div class="stat-val">{{ total_products }}</div><div class="stat-lbl">{{ t('dash.stats.products') }}</div></div>
     </div>
     <div class="stat">
         <div class="stat-ico yellow"><i class="bi bi-exclamation-triangle"></i></div>
-        <div><div class="stat-val">{{ low_stock }}</div><div class="stat-lbl">Stok Tipis</div></div>
+        <div><div class="stat-val">{{ low_stock }}</div><div class="stat-lbl">{{ t('dash.stats.low_stock') }}</div></div>
     </div>
 </div>
 
@@ -32,22 +32,22 @@
                 <div class="stat-ico green"><i class="bi bi-check-circle-fill"></i></div>
                 <div style="flex:1">
                     <div style="font-weight:600;font-size:.88rem;">Gemini AI Online</div>
-                    <div style="font-size:.72rem;color:var(--c-text-3);">Siap melayani 24/7</div>
+                    <div style="font-size:.72rem;color:var(--c-text-3);">{{ t('dash.status.ready_24_7') }}</div>
                 </div>
-                <span class="badge badge-green"><i class="bi bi-lightning-fill"></i> Active</span>
+                <span class="badge badge-green"><i class="bi bi-lightning-fill"></i> {{ t('settings.active') }}</span>
             </div>
             <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
                 <div style="background:var(--c-bg);border:1px solid var(--c-border);border-radius:var(--r);padding:12px;text-align:center;">
                     <div style="font-size:1.1rem;font-weight:700;color:var(--c-green)">99.9%</div>
-                    <div style="font-size:.62rem;color:var(--c-text-3);">Uptime</div>
+                    <div style="font-size:.62rem;color:var(--c-text-3);">{{ t('dash.uptime') }}</div>
                 </div>
                 <div style="background:var(--c-bg);border:1px solid var(--c-border);border-radius:var(--r);padding:12px;text-align:center;">
                     <div style="font-size:1.1rem;font-weight:700;color:var(--c-blue)">&lt;2s</div>
-                    <div style="font-size:.62rem;color:var(--c-text-3);">Respon</div>
+                    <div style="font-size:.62rem;color:var(--c-text-3);">{{ t('dash.response') }}</div>
                 </div>
                 <div style="background:var(--c-bg);border:1px solid var(--c-border);border-radius:var(--r);padding:12px;text-align:center;">
                     <div style="font-size:1.1rem;font-weight:700;color:var(--c-yellow)">{{ week_orders }}</div>
-                    <div style="font-size:.62rem;color:var(--c-text-3);">Order</div>
+                    <div style="font-size:.62rem;color:var(--c-text-3);">{{ t('dash.order') }}</div>
                 </div>
             </div>
         </div>
@@ -55,20 +55,20 @@
 
     <!-- Quick Actions -->
     <div class="card">
-        <div class="card-head"><i class="bi bi-lightning" style="color:var(--c-yellow)"></i> Aksi Cepat</div>
+        <div class="card-head"><i class="bi bi-lightning" style="color:var(--c-yellow)"></i> {{ t('dash.quick_actions') }}</div>
         <div class="card-body">
             <div style="display:flex;flex-direction:column;gap:8px;">
                 <a href="{{ url_for('demo_page') }}" class="btn btn-primary" style="width:100%;justify-content:flex-start;">
-                    <i class="bi bi-play-circle"></i> Coba Demo AI
+                    <i class="bi bi-play-circle"></i> {{ t('demo.try_now') }}
                 </a>
                 <a href="{{ url_for('product_create') }}" class="btn btn-ghost" style="width:100%;justify-content:flex-start;">
-                    <i class="bi bi-plus-circle" style="color:var(--c-green)"></i> Tambah Produk
+                    <i class="bi bi-plus-circle" style="color:var(--c-green)"></i> {{ t('products.add') }}
                 </a>
                 <a href="{{ url_for('conversations_page') }}" class="btn btn-ghost" style="width:100%;justify-content:flex-start;">
-                    <i class="bi bi-chat-left-text" style="color:var(--c-blue)"></i> Lihat Percakapan
+                    <i class="bi bi-chat-left-text" style="color:var(--c-blue)"></i> {{ t('dash.view_conversations') }}
                 </a>
                 <a href="{{ url_for('settings_page') }}" class="btn btn-ghost" style="width:100%;justify-content:flex-start;">
-                    <i class="bi bi-gear" style="color:var(--c-text-3)"></i> Pengaturan
+                    <i class="bi bi-gear" style="color:var(--c-text-3)"></i> {{ t('nav.settings') }}
                 </a>
             </div>
         </div>
@@ -77,13 +77,13 @@
 
 <!-- Google Cloud Status -->
 <div class="card">
-    <div class="card-head"><i class="bi bi-cloud" style="color:var(--c-blue)"></i> Google Cloud Services</div>
+    <div class="card-head"><i class="bi bi-cloud" style="color:var(--c-blue)"></i> {{ t('dash.cloud_services') }}</div>
     <div class="card-body">
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
             <div style="background:var(--c-bg);border:1px solid var(--c-border);border-radius:var(--r);padding:12px;text-align:center;">
                 <div style="font-size:1.5rem;">🤖</div>
                 <div style="font-size:.72rem;font-weight:600;">Gemini API</div>
-                <span class="badge badge-green">Active</span>
+                <span class="badge badge-green">{{ t('settings.active') }}</span>
             </div>
             <div style="background:var(--c-bg);border:1px solid var(--c-border);border-radius:var(--r);padding:12px;text-align:center;">
                 <div style="font-size:1.5rem;">🗄️</div>
@@ -104,20 +104,21 @@
     <div class="card-head"><i class="bi bi-whatsapp" style="color:#25D366"></i> WhatsApp Integration</div>
     <div class="card-body" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
         <div>
-            <div style="font-size:.82rem;">AI otomatis balas pesan WhatsApp</div>
+            <div style="font-size:.82rem;">{{ t('dash.whatsapp_desc') }}</div>
             <code style="font-size:.68rem;color:var(--c-text-3);background:var(--c-bg);padding:2px 6px;border-radius:4px;border:1px solid var(--c-border);">{{ request.host_url }}webhook</code>
         </div>
-        <span class="badge badge-green"><i class="bi bi-check-circle"></i> Connected</span>
+        <span class="badge badge-green"><i class="bi bi-check-circle"></i> {{ t('dash.connected') }}</span>
     </div>
 </div>
 
 <!-- Recent Conversations -->
 <div class="card">
     <div class="card-head" style="justify-content:space-between;">
-        <span><i class="bi bi-chat-left-text me-1"></i> Percakapan Terbaru</span>
-        <a href="{{ url_for('conversations_page') }}" class="btn btn-sm btn-ghost">Lihat Semua <i class="bi bi-arrow-right" style="font-size:.6rem;margin-left:4px;"></i></a>
+        <span><i class="bi bi-chat-left-text me-1"></i> {{ t('dash.recent_chats') }}</span>
+        <a href="{{ url_for('conversations_page') }}" class="btn btn-sm btn-ghost">{{ t('dash.view_all') }} <i class="bi bi-arrow-right" style="font-size:.6rem;margin-left:4px;"></i></a>
     </div>
     {% if recent_conversations %}
+        {% set intent_map = {'store_info': t('intent.store_info'), 'stock_inquiry': t('intent.stock_inquiry'), 'price_inquiry': t('intent.price_inquiry'), 'product_inquiry': t('intent.product_inquiry'), 'order': t('intent.order'), 'general': t('intent.general'), 'recommendation': t('intent.recommendation'), 'greeting': t('intent.greeting'), 'fallback': t('intent.fallback')} %}
         {% for c in recent_conversations[:5] %}
         <div style="display:flex;gap:12px;padding:12px;border-bottom:1px solid var(--c-border);">
             <div style="width:36px;height:36px;border-radius:50%;background:var(--c-bg);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:.78rem;color:var(--c-text-2);flex-shrink:0;">
@@ -126,7 +127,7 @@
             <div style="flex:1;min-width:0;">
                 <div style="display:flex;justify-content:space-between;">
                     <span style="font-weight:600;font-size:.78rem;">{{ c.customer_name or c.customer_phone }}</span>
-                    <span style="font-size:.62rem;color:var(--c-text-3);">{{ c.intent }}</span>
+                    <span style="font-size:.62rem;color:var(--c-text-3);">{{ intent_map.get(c.intent, c.intent) }}</span>
                 </div>
                 <div style="font-size:.72rem;color:var(--c-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ c.message_in }}</div>
             </div>
@@ -134,7 +135,7 @@
         {% endfor %}
     {% else %}
         <div style="padding:24px;text-align:center;color:var(--c-text-3);font-size:.78rem;">
-            Belum ada percakapan
+            {{ t('conv.no_conversations') }}
         </div>
     {% endif %}
 </div>
