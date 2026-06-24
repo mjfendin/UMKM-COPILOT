@@ -230,8 +230,10 @@ TOTAL PRODUK: {len(products)}
             
             return response.text.strip()
         except Exception as e:
-            print(f"Gemini API error: {e}")
-            return "Maaf Kak, ada gangguan sistem. Silakan coba lagi dalam beberapa saat ya! 🙏"
+            import traceback
+            print(f"Gemini API error: {type(e).__name__}: {e}")
+            traceback.print_exc()
+            return f"[ERROR: {type(e).__name__}: {str(e)[:200]}]"
     
     def handle_message(self, message, shop_id):
         """Process incoming WhatsApp message"""
