@@ -17,7 +17,15 @@ from functools import wraps
 # ============================================================
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'umkm-copilot-secret-key-change-in-production')
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///umkm_copilot.db')
+
+# Database: use /tmp on Vercel (ephemeral but writable), local file otherwise
+_db_path = os.environ.get('DATABASE_URL', '')
+if not _db_path:
+    if os.path.exists('/tmp') and os.access('/tmp', os.W_OK):
+        _db_path = 'sqlite:////tmp/umkm_copilot.db'
+    else:
+        _db_path = 'sqlite:///umkm_copilot.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = _db_path
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # WhatsApp Cloud API config
