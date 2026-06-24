@@ -187,12 +187,48 @@ BENTUK RESPONS:
     def __init__(self, api_key=None):
         self.api_key = api_key or GEMINI_API_KEY
         self.model = GEMINI_MODEL
+        # Rate limiter
+        self._call_times = []
+        self._quota_exhausted = False
+        self._quota_exhausted_at = 0
+        self._cooldown_seconds = 62  # Reset every 62s
+    
+    def _check_rate_limit(self):
+        """Check if we should skip Gemini API call"""
+        import time
+        now = time.time()
+        
+        # Auto-recovery: if quota was exhausted, try again after cooldown
+        if self._quota_exhausted:
+            if now - self._quota_exhausted_at < self._cooldown_seconds:
+                return False  # Skip API call
+            else:
+                self._quota_exhausted = False
+                self._call_times = []
+                print("Rate limiter: cooldown expired, retrying Gemini API")
+        
+        # Clean old timestamps (older than 60s)
+        self._call_times = [t for t in self._call_times if now - t < 60]
+        
+        # Free tier: ~15 RPM, keep 3 buffer
+        if len(self._call_times) >= 12:
+            return False
+        
+        self._call_times.append(now)
+        return True
+    
+    def _mark_quota_exhausted(self):
+        """Mark quota as exhausted"""
+        import time
+        self._quota_exhausted = True
+        self._quota_exhausted_at = time.time()
+        print("Rate limiter: Gemini API quota exhausted, switching to fallback")
     
     def _build_context(self, shop, products):
         """Build context from shop data for the AI"""
         product_list = "\n".join([
             f"- {p.name}: Rp {p.price:,.0f} (Stok: {p.stock}) - {p.category}"
-            for p in products[:20]  # Limit to 20 products
+            for p in products[:20]
         ])
         
         return f"""
@@ -211,17 +247,76 @@ PRODUK TERSEDIA:
 TOTAL PRODUK: {len(products)}
 """
     
+    def _fallback_response(self, message, shop, products):
+        """Smart fallback when Gemini API is unavailable"""
+        import random
+        msg_lower = message.lower()
+        
+        # Greeting
+        if any(k in msg_lower for k in ['halo', 'hai', 'hello', 'hi', 'pagi', 'siang', 'sore', 'malam']):
+            return f"Halo Kak! 👋 Selamat datang di {shop.name}. Ada yang bisa kami bantu hari ini? 😊"
+        
+        # Product list
+        if any(k in msg_lower for k in ['produk', 'apa saja', 'daftar', 'catalog', 'katalog']):
+            plist = "\n".join([f"• {p.name} - Rp {p.price:,.0f}" for p in products[:5]])
+            return f"Produk kami Kak:\n{plist}\n\nMau lihat yang mana? 😊"
+        
+        # Price inquiry - match specific product
+        for p in products:
+            if any(word in msg_lower for word in p.name.lower().split()):
+                if any(k in msg_lower for k in ['harga', 'berapa', 'price', 'murah', 'mahal']):
+                    return f"Untuk {p.name}, harganya Rp {p.price:,.0f} ya Kak. Stok masih ada {p.stock} unit! 😊"
+                if any(k in msg_lower for k in ['stok', 'stock', 'ada', 'habis']):
+                    if p.stock > 0:
+                        return f"{p.name} masih ada {p.stock} unit Kak. Harga Rp {p.price:,.0f}. Mau diorder? 😉"
+                    else:
+                        return f"Maaf Kak, {p.name} lagi kosong 😔 Kami bisa kabarin kalau sudah restok ya?"
+                # General product mention
+                return f"{p.name} - Rp {p.price:,.0f} (Stok: {p.stock}). Mau yang mana Kak? 😊"
+        
+        # Generic price inquiry
+        if any(k in msg_lower for k in ['harga', 'berapa', 'price']):
+            p = random.choice(products) if products else None
+            if p:
+                return f"Contoh: {p.name} Rp {p.price:,.0f}. Tanya produk spesifik ya Kak! 😊"
+            return "Bisa tanya harga produk tertentu ya Kak. Contoh: 'Berapa harga [nama produk]?' 😊"
+        
+        # Stock inquiry
+        if any(k in msg_lower for k in ['stok', 'stock', 'ada', 'habis', 'kosong']):
+            return "Produk apa yang ingin dicek stoknya Kak? 😊"
+        
+        # Order
+        if any(k in msg_lower for k in ['pesan', 'order', 'beli', 'checkout']):
+            return "Untuk pemesanan, Kakak bisa langsung chat:\n📱 WA: " + (shop.whatsapp_number or shop.phone) + "\n\nAtau ketik: PESAN [nama produk] ya Kak! 😊"
+        
+        # Store info
+        if any(k in msg_lower for k in ['alamat', 'lokasi', 'toko', 'kontak', 'jam buka', 'buka']):
+            return f"📍 {shop.name}\n🏠 {shop.address}\n🕐 Jam: {shop.open_hours} - {shop.close_hours}\n📞 {shop.phone}"
+        
+        # Recommendation
+        if any(k in msg_lower for k in ['rekomendasi', 'saran', 'recommend', 'cocok']):
+            p = random.choice(products) if products else None
+            if p:
+                return f"Rekomendasi: {p.name} Rp {p.price:,.0f} 🔥\n{p.description}\nMau lihat detail? 😊"
+            return "Tanya produk spesifik ya Kak, nanti kami bantu carikan yang cocok! 😊"
+        
+        # Default
+        return f"Makasih Kak! 😊 Ada yang bisa kami bantu soal produk atau info {shop.name}?"
+    
     def _call_gemini(self, user_message, context, history=None):
-        """Call Gemini API for response generation"""
+        """Call Gemini API with rate limiter and fallback"""
+        # Check rate limit
+        if not self._check_rate_limit():
+            print("Rate limiter: skipping Gemini API call, using fallback")
+            return None  # Signal to use fallback
+        
         try:
             import google.generativeai as genai
             genai.configure(api_key=self.api_key)
             model = genai.GenerativeModel(self.model)
             
-            # Build conversation
             full_prompt = f"{self.SYSTEM_PROMPT}\n\n{context}\n\nPESAN CUSTOMER: {user_message}"
             
-            # Add history if available
             if history:
                 chat = model.start_chat(history=history)
                 response = chat.send_message(full_prompt)
@@ -230,17 +325,20 @@ TOTAL PRODUK: {len(products)}
             
             return response.text.strip()
         except Exception as e:
-            import traceback
-            print(f"Gemini API error: {type(e).__name__}: {e}")
-            traceback.print_exc()
-            return f"[ERROR: {type(e).__name__}: {str(e)[:200]}]"
+            err_str = str(e)
+            print(f"Gemini API error: {type(e).__name__}: {err_str[:200]}")
+            
+            # Detect quota exhaustion
+            if '429' in err_str or 'quota' in err_str.lower() or 'ResourceExhausted' in type(e).__name__:
+                self._mark_quota_exhausted()
+            
+            return None  # Signal to use fallback
     
     def handle_message(self, message, shop_id):
         """Process incoming WhatsApp message"""
         import time
         start_time = time.time()
         
-        # Get shop and products
         shop = Shop.query.get(shop_id)
         if not shop or not shop.ai_enabled:
             return {
@@ -250,13 +348,17 @@ TOTAL PRODUK: {len(products)}
             }
         
         products = Product.query.filter_by(shop_id=shop_id, is_active=True).all()
-        context = self._build_context(shop, products)
         
         # Detect intent
         intent = self._detect_intent(message, products)
         
-        # Generate response
+        # Try Gemini API first
+        context = self._build_context(shop, products)
         response = self._call_gemini(message, context)
+        
+        # Fallback to local responses if Gemini fails
+        if not response:
+            response = self._fallback_response(message, shop, products)
         
         response_time = int((time.time() - start_time) * 1000)
         
@@ -270,34 +372,23 @@ TOTAL PRODUK: {len(products)}
         """Simple intent detection based on keywords"""
         msg_lower = message.lower()
         
-        # Product inquiry
         for p in products:
             if p.name.lower() in msg_lower:
                 return 'product_inquiry'
         
-        # Price inquiry
-        price_keywords = ['harga', 'berapa', 'price', 'murah', 'mahal']
-        if any(k in msg_lower for k in price_keywords):
+        if any(k in msg_lower for k in ['harga', 'berapa', 'price', 'murah', 'mahal']):
             return 'price_inquiry'
         
-        # Stock inquiry
-        stock_keywords = ['stok', 'stock', 'ada', 'habis', 'kosong']
-        if any(k in msg_lower for k in stock_keywords):
+        if any(k in msg_lower for k in ['stok', 'stock', 'ada', 'habis', 'kosong']):
             return 'stock_inquiry'
         
-        # Order
-        order_keywords = ['pesan', 'order', 'beli', 'checkout', 'bayar']
-        if any(k in msg_lower for k in order_keywords):
+        if any(k in msg_lower for k in ['pesan', 'order', 'beli', 'checkout', 'bayar']):
             return 'order'
         
-        # Greeting
-        greeting_keywords = ['halo', 'hai', 'hello', 'hi', 'pagi', 'siang', 'sore', 'malam']
-        if any(k in msg_lower for k in greeting_keywords):
+        if any(k in msg_lower for k in ['halo', 'hai', 'hello', 'hi', 'pagi', 'siang', 'sore', 'malam']):
             return 'greeting'
         
-        # Store info
-        info_keywords = ['alamat', 'jam buka', 'lokasi', 'toko', 'kontak']
-        if any(k in msg_lower for k in info_keywords):
+        if any(k in msg_lower for k in ['alamat', 'jam buka', 'lokasi', 'toko', 'kontak']):
             return 'store_info'
         
         return 'general'
