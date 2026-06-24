@@ -280,10 +280,27 @@ TOTAL PRODUK: {len(products)}
             return f"Halo Kak! 👋 Selamat datang di {shop.name}. Ada yang bisa kami bantu hari ini? 😊"
         
         # Recommendation
-        if any(k in msg_lower for k in ['rekomendasi', 'saran', 'recommend', 'cocok']):
-            p = random.choice(products) if products else None
-            if p:
-                return f"Rekomendasi: {p.name} Rp {p.price:,.0f} 🔥\n{p.description}\nMau lihat detail? 😊"
+        if any(k in msg_lower for k in ['rekomendasi', 'saran', 'recommend', 'cocok', 'murah', 'bagus']):
+            # Filter by category if mentioned
+            category_map = {
+                'aksesoris': ['Aksesoris', 'Jam', 'Topi', 'Tas'],
+                'pakaian': ['Pakaian', 'Pria', 'Wanita', 'Kemeja', 'Dress', 'Hoodie'],
+                'sepatu': ['Sepatu', 'Sneakers', 'Footwear'],
+                'celana': ['Celana', 'Jeans'],
+            }
+            filtered = products
+            for cat_key, cat_vals in category_map.items():
+                if cat_key in msg_lower:
+                    filtered = [p for p in products if any(cv.lower() in p.category.lower() for cv in cat_vals)]
+                    break
+            
+            # Sort by price (cheapest first for "murah")
+            if any(k in msg_lower for k in ['murah', 'terjangkau', 'hemat']):
+                filtered.sort(key=lambda p: p.price)
+            
+            if filtered:
+                p = filtered[0]
+                return f"Rekomendasi: {p.name} Rp {p.price:,.0f} 🔥\n{p.description}\nStok: {p.stock} unit\nMau lihat detail? 😊"
             return "Tanya produk spesifik ya Kak, nanti kami bantu carikan yang cocok! 😊"
         
         # Price inquiry - match specific product
