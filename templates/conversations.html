@@ -12,7 +12,7 @@
             <div class="list-body">
                 <div class="list-top">
                     <span class="list-name">{{ c.customer_name or 'Customer' }} <span class="badge badge-gray">{{ c.intent }}</span></span>
-                    <span class="list-time">{{ c.created_at|timeago }}</span>
+                    <span class="list-time">{{ c.created_at[:16] if c.created_at else '' }}</span>
                 </div>
                 <div style="margin-top:6px;">
                     <div style="background:var(--c-bg);border:1px solid var(--c-border);border-radius:6px;padding:6px 10px;margin-bottom:4px;font-size:.78rem;">

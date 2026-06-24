@@ -21,10 +21,10 @@
         <a href="{{ url_for('index') }}" class="menu-link{% if request.endpoint == 'index' %} active{% endif %}">
             <i class="bi bi-grid-1x2"></i> Dashboard
         </a>
-        <a href="{{ url_for('products_list') }}" class="menu-link{% if request.endpoint in ['products_list','product_create','product_edit'] %} active{% endif %}">
+        <a href="{{ url_for('products_page') }}" class="menu-link{% if request.endpoint in ['products_page','product_create','product_edit'] %} active{% endif %}">
             <i class="bi bi-box-seam"></i> Produk
         </a>
-        <a href="{{ url_for('conversations_list') }}" class="menu-link{% if request.endpoint == 'conversations_list' %} active{% endif %}">
+        <a href="{{ url_for('conversations_page') }}" class="menu-link{% if request.endpoint == 'conversations_page' %} active{% endif %}">
             <i class="bi bi-chat-left-text"></i> Percakapan
         </a>
         <a href="{{ url_for('analytics_page') }}" class="menu-link{% if request.endpoint == 'analytics_page' %} active{% endif %}">
@@ -77,9 +77,9 @@
 
 <nav class="mob-nav">
     <a href="{{ url_for('index') }}" class="{% if request.endpoint == 'index' %}active{% endif %}"><i class="bi bi-grid-1x2"></i> Home</a>
-    <a href="{{ url_for('products_list') }}" class="{% if request.endpoint in ['products_list','product_create'] %}active{% endif %}"><i class="bi bi-box-seam"></i> Produk</a>
+    <a href="{{ url_for('products_page') }}" class="{% if request.endpoint in ['products_page','product_create'] %}active{% endif %}"><i class="bi bi-box-seam"></i> Produk</a>
     <a href="{{ url_for('demo_page') }}" class="{% if request.endpoint == 'demo_page' %}active{% endif %}"><i class="bi bi-play-circle"></i> Demo</a>
-    <a href="{{ url_for('conversations_list') }}" class="{% if request.endpoint == 'conversations_list' %}active{% endif %}"><i class="bi bi-chat-left-text"></i> Chat</a>
+    <a href="{{ url_for('conversations_page') }}" class="{% if request.endpoint == 'conversations_page' %}active{% endif %}"><i class="bi bi-chat-left-text"></i> Chat</a>
     <a href="{{ url_for('settings_page') }}" class="{% if request.endpoint == 'settings_page' %}active{% endif %}"><i class="bi bi-gear"></i> Atur</a>
 </nav>
 

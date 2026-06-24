@@ -990,16 +990,19 @@ def seed_data():
 # ============================================================
 # INITIALIZE
 # ============================================================
-with app.app_context():
-    db.create_all()
-    seed_data()
-    
-    # Seed Firestore if available
-    if HAS_FIRESTORE:
-        try:
-            seed_firestore_data('default')
-        except Exception as e:
-            print(f"Firestore seed error: {e}")
+try:
+    with app.app_context():
+        db.create_all()
+        seed_data()
+        
+        # Seed Firestore if available
+        if HAS_FIRESTORE:
+            try:
+                seed_firestore_data('default')
+            except Exception as e:
+                print(f"Firestore seed error: {e}")
+except Exception as e:
+    print(f"Init error: {e}")
 
 
 # ============================================================
