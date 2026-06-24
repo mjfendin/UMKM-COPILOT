@@ -492,19 +492,23 @@ def product_create():
     shop = get_or_create_shop()
     
     if request.method == 'POST':
-        product = Product(
-            shop_id=shop.id,
-            name=request.form.get('name', ''),
-            description=request.form.get('description', ''),
-            price=float(request.form.get('price', 0)),
-            stock=int(request.form.get('stock', 0)),
-            category=request.form.get('category', 'Umum'),
-            image_url=request.form.get('image_url', '')
-        )
-        db.session.add(product)
-        db.session.commit()
+        try:
+            product = Product(
+                shop_id=shop.id,
+                name=request.form.get('name', ''),
+                description=request.form.get('description', ''),
+                price=float(request.form.get('price', 0) or 0),
+                stock=int(request.form.get('stock', 0) or 0),
+                category=request.form.get('category', 'Umum'),
+                image_url=request.form.get('image_url', '')
+            )
+            db.session.add(product)
+            db.session.commit()
+            flash('Produk berhasil ditambahkan!', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error: {str(e)}', 'danger')
         
-        flash('Produk berhasil ditambahkan! ✅', 'success')
         return redirect(url_for('products_list'))
     
     return render_template('product_form.html', shop=shop, mode='create')
@@ -517,15 +521,19 @@ def product_edit(product_id):
     product = Product.query.get_or_404(product_id)
     
     if request.method == 'POST':
-        product.name = request.form.get('name', product.name)
-        product.description = request.form.get('description', product.description)
-        product.price = float(request.form.get('price', product.price))
-        product.stock = int(request.form.get('stock', product.stock))
-        product.category = request.form.get('category', product.category)
-        product.image_url = request.form.get('image_url', product.image_url)
-        db.session.commit()
+        try:
+            product.name = request.form.get('name', product.name)
+            product.description = request.form.get('description', product.description)
+            product.price = float(request.form.get('price', product.price) or 0)
+            product.stock = int(request.form.get('stock', product.stock) or 0)
+            product.category = request.form.get('category', product.category)
+            product.image_url = request.form.get('image_url', product.image_url)
+            db.session.commit()
+            flash('Produk berhasil diupdate!', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error: {str(e)}', 'danger')
         
-        flash('Produk berhasil diupdate! ✅', 'success')
         return redirect(url_for('products_list'))
     
     return render_template('product_form.html', shop=shop, product=product, mode='edit')
@@ -534,10 +542,15 @@ def product_edit(product_id):
 @app.route('/products/<int:product_id>/delete', methods=['POST'])
 def product_delete(product_id):
     """Delete product"""
-    product = Product.query.get_or_404(product_id)
-    db.session.delete(product)
-    db.session.commit()
-    flash('Produk berhasil dihapus! 🗑️', 'warning')
+    try:
+        product = Product.query.get_or_404(product_id)
+        db.session.delete(product)
+        db.session.commit()
+        flash('Produk berhasil dihapus!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error: {str(e)}', 'danger')
+    
     return redirect(url_for('products_list'))
 
 
