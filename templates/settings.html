@@ -37,6 +37,16 @@
                     <label class="lbl">Alamat</label>
                     <textarea class="input" name="address" rows="2">{{ shop.address }}</textarea>
                 </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div>
+                        <label class="lbl">Jam Buka</label>
+                        <input class="input" type="time" name="open_hours" value="{{ shop.open_hours or '09:00' }}">
+                    </div>
+                    <div>
+                        <label class="lbl">Jam Tutup</label>
+                        <input class="input" type="time" name="close_hours" value="{{ shop.close_hours or '21:00' }}">
+                    </div>
+                </div>
             </div>
 
             <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--c-border);">

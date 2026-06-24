@@ -53,6 +53,8 @@ class Shop(db.Model):
     address = db.Column(db.Text, default='')
     category = db.Column(db.String(50), default='Retail')
     whatsapp_number = db.Column(db.String(30), default='')
+    open_hours = db.Column(db.String(10), default='09:00')
+    close_hours = db.Column(db.String(10), default='21:00')
     ai_enabled = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
@@ -65,7 +67,8 @@ class Shop(db.Model):
         return {
             'id': self.id, 'name': self.name, 'owner_name': self.owner_name,
             'phone': self.phone, 'address': self.address, 'category': self.category,
-            'whatsapp_number': self.whatsapp_number, 'ai_enabled': self.ai_enabled,
+            'whatsapp_number': self.whatsapp_number, 'open_hours': self.open_hours,
+            'close_hours': self.close_hours, 'ai_enabled': self.ai_enabled,
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
 
@@ -199,6 +202,8 @@ DATA TOKO:
 - Kategori: {shop.category}
 - Alamat: {shop.address}
 - Telepon: {shop.phone}
+- Jam Buka: {shop.open_hours} - {shop.close_hours}
+- WhatsApp: {shop.whatsapp_number}
 
 PRODUK TERSEDIA:
 {product_list if product_list else "Belum ada produk terdaftar"}
@@ -617,6 +622,8 @@ def settings_page():
             shop.address = request.form.get('address', shop.address)
             shop.category = request.form.get('category', shop.category)
             shop.whatsapp_number = request.form.get('whatsapp_number', shop.whatsapp_number)
+            shop.open_hours = request.form.get('open_hours', shop.open_hours)
+            shop.close_hours = request.form.get('close_hours', shop.close_hours)
             shop.ai_enabled = request.form.get('ai_enabled') == 'on'
             db.session.commit()
             flash('Pengaturan berhasil disimpan!', 'success')
@@ -722,6 +729,8 @@ def seed_data():
         address='JL. Cempaka No.45, Kota Tangerang',
         category='Retail Fashion',
         whatsapp_number='6281283839494',
+        open_hours='09:00',
+        close_hours='21:00',
         ai_enabled=True
     )
     db.session.add(shop)
