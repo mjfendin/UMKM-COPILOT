@@ -431,9 +431,9 @@ def get_or_create_shop():
     shop = Shop.query.first()
     if not shop:
         shop = Shop(
-            name='Toko UMKM', owner_name='', phone='',
-            address='', category='Retail',
-            whatsapp_number='', ai_enabled=True
+            name='Toko MJF Endin', owner_name='MJF Endin', phone='081283839494',
+            address='JL. Cempaka No.45, Kota Tangerang', category='Retail',
+            whatsapp_number='6281283839494', ai_enabled=True
         )
         db.session.add(shop)
         db.session.commit()
@@ -716,12 +716,12 @@ def seed_data():
     
     # Create shop
     shop = Shop(
-        name='Toko Berkah Jaya',
-        owner_name='Pak Budi Santoso',
-        phone='081234567890',
-        address='Jl. Merdeka No. 42, Bandung',
+        name='Toko MJF Endin',
+        owner_name='MJF Endin',
+        phone='081283839494',
+        address='JL. Cempaka No.45, Kota Tangerang',
         category='Retail Fashion',
-        whatsapp_number='6281234567890',
+        whatsapp_number='6281283839494',
         ai_enabled=True
     )
     db.session.add(shop)
@@ -756,7 +756,7 @@ def seed_data():
             message_in='Pesan hoodie oversize', message_out='Maaf Kak, Hoodie Oversize lagi kosong 😔 Stok habis. Kami bisa kabarin kalau sudah restok ya? Atau mau lihat produk lain yang mirip?',
             intent='order', response_time_ms=1100),
         Conversation(shop_id=shop.id, customer_phone='628555555555', customer_name='Maya',
-            message_in='Toko buka jam berapa?', message_out='Halo Kak Maya! 🏪 Toko Berkah Buka setiap hari jam 09:00 - 21:00 WIB. Alamat di Jl. Merdeka No. 42, Bandung. Datang ya Kak!',
+            message_in='Toko buka jam berapa?', message_out='Halo Kak Maya! 🏪 Toko MJF Endin buka setiap hari jam 09:00 - 21:00 WIB. Alamat di JL. Cempaka No.45, Kota Tangerang. Datang ya Kak!',
             intent='store_info', response_time_ms=750),
     ]
     for c in sample_convs:
