@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Push to GitHub</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui;background:#0f0f0f;color:#e0e0e0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.card{max-width:500px;width:100%;background:#1a1a2e;border-radius:16px;padding:36px}
+h1{font-size:20px;margin-bottom:6px}
+.sub{color:#888;font-size:13px;margin-bottom:20px}
+input{width:100%;padding:14px;background:#16213e;border:1px solid #333;border-radius:8px;color:#fff;font-size:15px;margin-bottom:14px;font-family:monospace}
+input:focus{outline:none;border-color:#4CAF50}
+.btn{width:100%;padding:14px;background:#4CAF50;border:none;border-radius:8px;color:#fff;font-size:15px;font-weight:700;cursor:pointer}
+.btn:hover{background:#45a049}
+.btn:disabled{background:#333}
+#status{margin-top:16px;padding:14px;border-radius:8px;display:none;font-size:13px;line-height:1.7}
+.ok{display:block!important;background:#1b4332;border:1px solid #2d6a4f;color:#95d5b2}
+.err{display:block!important;background:#3d1f1f;border:1px solid #6b2727;color:#f5a3a3}
+.wait{display:block!important;background:#1a1a2e;border:1px solid #333;color:#aaa}
+code{background:#16213e;padding:2px 6px;border-radius:4px;font-size:12px}
+</style>
+</head>
+<body>
+<div class="card">
+<h1>\U0001f4e6 Push to GitHub</h1>
+<p class="sub">Paste token, click push</p>
+<form id="f">
+<input type="password" id="tok" placeholder="ghp_xx...xxxx" required autocomplete="off">
+<button class="btn" type="submit" id="btn">\U0001f680 Push</button>
+</form>
+<div id="status"></div>
+</div>
+<script>
+document.getElementById('f').onsubmit=async e=>{
+e.preventDefault();
+const b=document.getElementById('btn'),s=document.getElementById('status'),t=document.getElementById('tok').value;
+b.disabled=true;b.textContent='\u23f3 Pushing...';
+s.className='wait';s.style.display='block';
+s.innerHTML='Mengirim ke GitHub...';
+try{
+const r=await fetch('/push-to-github',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'github_token='+encodeURIComponent(t)});
+const j=await r.json();
+if(j.success){
+s.className='ok';
+s.innerHTML='\u2705 <b>'+j.files_uploaded+'</b> files<br>Commit: <code>'+j.commit_sha+'</code><br><a href="'+j.repo_url+'" target="_blank" style="color:#95d5b2">GitHub \u2192</a>';
+}else{
+s.className='err';s.innerHTML='\u274c '+j.error;
+}
+}catch(x){s.className='err';s.innerHTML='\u274c '+x.message}
+b.disabled=false;b.textContent='\U0001f680 Push';
+};
+</script>
+</body>
+</html>
